@@ -7,12 +7,16 @@ class Game {
 	gridWidth = 7;
 	gridHeight = 5;
 
+	coord = {x: -1, y: -1};
+	mouseCoord = {x: -1, y: -1};
+
 	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 		this.context = context;
 		this.canvas = canvas;
 	}
 
 	nextFrame(_timestamp: number) {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawGrid();
 	}
 
@@ -30,6 +34,9 @@ class Game {
 				const x = i * this.cellSize;
 				const y = j * this.cellSize;
 				this.context.strokeRect(x, y, this.cellSize, this.cellSize)
+				if (i == this.coord.x && j == this.coord.y) {
+					this.context.fillRect(x, y, this.cellSize, this.cellSize)
+				}
 			}
 		}
 		this.context.restore();
@@ -37,9 +44,16 @@ class Game {
 
 	onMouseMove(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
-		const mouseX = event.clientX - rect.left;
-		const mouseY = event.clientY - rect.top;
-		this.mouseToGridCoord(mouseX, mouseY);
+		this.mouseCoord.x = event.clientX - rect.left;
+		this.mouseCoord.y = event.clientY - rect.top;
+		const coord = this.mouseToGridCoord(this.mouseCoord.x, this.mouseCoord.y);
+		if (coord) {
+			this.coord.x = coord.x;
+			this.coord.y = coord.y;
+		} else {
+			this.coord.x = -1; 
+			this.coord.y = -1;
+		}
 	}
 
 	mouseToGridCoord(mouseX: number, mouseY: number) {
@@ -50,16 +64,14 @@ class Game {
 		const endX = offsetX + this.gridWidth*this.cellSize;
 		const endY = offsetY + this.gridHeight*this.cellSize;
 		if (mouseX < offsetX || mouseY < offsetY) {
-			console.log("outside of map");
 			return
 		}
 		if (mouseX > endX || mouseY > endY) {
-			console.log("outside of map");
 			return
 		}
 		const mapX = Math.floor((mouseX - offsetX) / this.cellSize);
 		const mapY = Math.floor((mouseY - offsetY) / this.cellSize);
-		console.log(mapX + ". " + mapY)
+		return {x: mapX, y: mapY};
 	}
 
 }
