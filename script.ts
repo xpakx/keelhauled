@@ -42,6 +42,34 @@ class Game {
 		}
 		this.context.restore();
 	}
+
+	onMouseMove(event: MouseEvent) {
+		const rect = this.canvas.getBoundingClientRect();
+		const mouseX = event.clientX - rect.left;
+		const mouseY = event.clientY - rect.top;
+		this.mouseToGridCoord(mouseX, mouseY);
+	}
+
+	mouseToGridCoord(mouseX: number, mouseY: number) {
+		const gridPixelWidth = this.cellSize*this.gridSize;
+		const gridPixelHeight = this.cellSize*this.gridSize;
+		const offsetX = (this.canvas.width - gridPixelWidth) / 2;
+		const offsetY = (this.canvas.height - gridPixelHeight) / 2;
+		const endX = offsetX + this.gridSize*this.cellSize;
+		const endY = offsetY + this.gridSize*this.cellSize;
+		if (mouseX < offsetX || mouseY < offsetY) {
+			console.log("outside of map");
+			return
+		}
+		if (mouseX > endX || mouseY > endY) {
+			console.log("outside of map");
+			return
+		}
+		const mapX = Math.floor((mouseX - offsetX) / this.cellSize);
+		const mapY = Math.floor((mouseY - offsetY) / this.cellSize);
+		console.log(mapX + ". " + mapY)
+	}
+
 }
 
 window.onload = async () => {
@@ -68,5 +96,9 @@ window.onload = async () => {
 	window.requestAnimationFrame((timestamp) => {
 		game.prevTimestamp = timestamp;
 		window.requestAnimationFrame(frame);
+	});
+
+	canvas.addEventListener('mousemove', function(event) {
+		game.onMouseMove(event);
 	});
 }
