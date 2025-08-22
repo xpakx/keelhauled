@@ -104,7 +104,14 @@ export class Game {
 
 	setGridSize(size: Size) {
 		const img = this.cellImageHidden;
-		this.grid = Array(100).fill(null).map(() => Array(50).fill(new Card(img, img, {width: this.cellSize, height: this.cellSize})));
+		this.grid = Array(size.width);
+		for (let i = 0; i < this.gridSize.width; i++) {
+			this.grid[i] = Array(size.height);
+			for (let j = 0; j < this.gridSize.height; j++) {
+				this.grid[i][j] = new Card(img, img, {width: this.cellSize, height: this.cellSize})
+			}
+		}
+
 		this.gridSize = size;
 		this.gridPixelSize.width = this.cellSize*this.gridSize.width;
 		this.gridPixelSize.height = this.cellSize*this.gridSize.height;
