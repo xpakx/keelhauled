@@ -15,6 +15,7 @@ window.onload = async () => {
 	let game = new Game(context, canvas);
 	const cardImage = await loadImage("images/card.png");
 	game.setCellImage(cardImage);
+	game.setGridSize({width: 5, height: 5});
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);

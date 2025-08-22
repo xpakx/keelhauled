@@ -8,6 +8,60 @@ export interface Position {
 	y: number;
 }
 
+export class Card {
+	back?: HTMLImageElement;
+	face?: HTMLImageElement;
+	size: Size;
+	drawDelta: Position;
+
+	shaking: boolean = false;
+	hovered: boolean = false;
+
+	constructor(
+		back: HTMLImageElement | undefined,
+		face: HTMLImageElement | undefined,
+		size: Size,
+	) {
+		this.back = back;
+		this.face = face;
+		this.size = size;
+		this.drawDelta = {x: 0, y: 0};
+	}
+
+	tick(timestamp: number, hovered: boolean) {
+		this.shaking = hovered;
+		this.hovered = hovered;
+
+		if (this.shaking) {
+			const amplitude = 1;
+			this.drawDelta.x = Math.sin(timestamp * 0.02) * amplitude;
+			this.drawDelta.y = Math.cos(timestamp * 0.03) * amplitude;
+		} else {
+			this.drawDelta.x = 0;
+			this.drawDelta.y = 0;
+		}
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position: Position) {
+		if (!this.back) {
+			if (this.hovered) {
+				ctx.fillRect(position.x, position.y, this.size.width, this.size.height)
+			} else {
+				ctx.strokeRect(position.x, position.y, this.size.width, this.size.height)
+			}
+
+			return
+		}
+		ctx.drawImage(
+			this.back, 
+			position.x + this.drawDelta.x, 
+			position.y + this.drawDelta.y,
+			this.size.width,
+			this.size.height
+		);
+	}
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
@@ -20,6 +74,10 @@ export class Game {
 	defaultCanvasSize: Size = {width: 800, height: 600};
 
 	gridSize: Size = {width: 0, height: 0};
+
+	grid: Card[][] = [];
+
+
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
 	gridEnd: Position = {x: 0, y:0};
@@ -45,6 +103,8 @@ export class Game {
 	}
 
 	setGridSize(size: Size) {
+		const img = this.cellImageHidden;
+		this.grid = Array(100).fill(null).map(() => Array(50).fill(new Card(img, img, {width: this.cellSize, height: this.cellSize})));
 		this.gridSize = size;
 		this.gridPixelSize.width = this.cellSize*this.gridSize.width;
 		this.gridPixelSize.height = this.cellSize*this.gridSize.height;
@@ -64,42 +124,14 @@ export class Game {
 				const x = i * this.cellSize;
 				const y = j * this.cellSize;
 				const underCursor = i == this.coord.x && j == this.coord.y;
-				if (underCursor) {
-					if (this.cellImageHidden) {
-						this.drawShakingCard(this.cellImageHidden, x, y, timestamp);
-
-					} else {
-						this.context.fillRect(x, y, this.cellSize, this.cellSize)
-					}
-				} else {
-					if (this.cellImageHidden) {
-						this.drawCard(this.cellImageHidden, x, y);
-
-					} else {
-						this.context.strokeRect(x, y, this.cellSize, this.cellSize)
-					}
-				}
+				const card = this.grid[i][j];
+				card.tick(timestamp, underCursor);
+				card.draw(this.context, {x, y});
 			}
 		}
 		this.context.restore();
 	}
-	
-	drawCard(image: HTMLImageElement, x: number, y: number) {
-		this.context.drawImage(
-			image, 
-			x, 
-			y,
-			this.cellSize,
-			this.cellSize
-		);
-	}
 
-	drawShakingCard(image: HTMLImageElement, x: number, y: number, timestamp: number) {
-		const amplitude = 1;
-		const shakeX = Math.sin(timestamp * 0.02) * amplitude;
-		const shakeY = Math.cos(timestamp * 0.03) * amplitude;
-		this.drawCard(image, x + shakeX, y + shakeY);
-	}
 
 	onMouseMove(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
