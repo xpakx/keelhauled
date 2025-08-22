@@ -34,9 +34,9 @@ export class Game {
 		this.setGridSize({width: 5, height: 5});
 	}
 
-	nextFrame(_timestamp: number) {
+	nextFrame(timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.drawGrid();
+		this.drawGrid(timestamp);
 	}
 
 	setCanvasSize(size: Size) {
@@ -54,7 +54,7 @@ export class Game {
 		this.gridEnd.y = this.gridOffset.y + this.gridSize.height*this.cellSize;
 	}
 
-	drawGrid() {
+	drawGrid(timestamp: number) {
 		this.context.save();
 
 		this.context.translate(this.gridOffset.x + 0.5, this.gridOffset.y + 0.5);
@@ -63,24 +63,42 @@ export class Game {
 			for (let j = 0; j < this.gridSize.height; j++) {
 				const x = i * this.cellSize;
 				const y = j * this.cellSize;
-				if (i == this.coord.x && j == this.coord.y) {
-					this.context.fillRect(x, y, this.cellSize, this.cellSize)
-				}
-				if (this.cellImageHidden) {
-					this.context.drawImage(
-						this.cellImageHidden, 
-						x, 
-						y,
-						this.cellSize,
-						this.cellSize
-					);
+				const underCursor = i == this.coord.x && j == this.coord.y;
+				if (underCursor) {
+					if (this.cellImageHidden) {
+						this.drawShakingCard(this.cellImageHidden, x, y, timestamp);
 
+					} else {
+						this.context.fillRect(x, y, this.cellSize, this.cellSize)
+					}
 				} else {
-					this.context.strokeRect(x, y, this.cellSize, this.cellSize)
+					if (this.cellImageHidden) {
+						this.drawCard(this.cellImageHidden, x, y);
+
+					} else {
+						this.context.strokeRect(x, y, this.cellSize, this.cellSize)
+					}
 				}
 			}
 		}
 		this.context.restore();
+	}
+	
+	drawCard(image: HTMLImageElement, x: number, y: number) {
+		this.context.drawImage(
+			image, 
+			x, 
+			y,
+			this.cellSize,
+			this.cellSize
+		);
+	}
+
+	drawShakingCard(image: HTMLImageElement, x: number, y: number, timestamp: number) {
+		const amplitude = 1;
+		const shakeX = Math.sin(timestamp * 0.02) * amplitude;
+		const shakeY = Math.cos(timestamp * 0.03) * amplitude;
+		this.drawCard(image, x + shakeX, y + shakeY);
 	}
 
 	onMouseMove(event: MouseEvent) {
