@@ -41,6 +41,15 @@ export class Card {
 			this.drawDelta.x = 0;
 			this.drawDelta.y = 0;
 		}
+		if (this.markForFlipping) {
+			console.log("Starting flipping");
+			this.targetFlipped = !this.flipped;
+			this.flipping = true;
+			this.flipStartTime = timestamp;
+			this.flippingProgress = 0;
+			this.markForFlipping = false;
+		}
+		if (this.flipping) this.progressFlipping(timestamp)
 	}
 
 	draw(ctx: CanvasRenderingContext2D, position: Position) {
@@ -54,6 +63,10 @@ export class Card {
 
 			return
 		}
+		if (this.flipping) {
+			this.drawFlipping(ctx, position);
+			return;
+		}
 		ctx.drawImage(
 			img, 
 			position.x + this.drawDelta.x, 
@@ -64,8 +77,50 @@ export class Card {
 	}
 
 	revealCard() {
-		this.flipped = true;
+		if (this.flipped) return;
+		this.flipCard();
 	}
+
+	flipCard() {
+		if (this.flipping) return;
+		this.markForFlipping = true;
+	}
+
+
+	flipStartTime: number = 0;
+	flipping: boolean = false;
+	flipDuration: number = 300;
+	flippingProgress: number = 0;
+	targetFlipped: boolean = false;
+	markForFlipping: boolean = false;
+
+	progressFlipping(timestamp: number) {
+		const elapsed = timestamp - this.flipStartTime;
+		this.flippingProgress = Math.min(elapsed / this.flipDuration, 1);
+
+		if (this.flippingProgress >= 0.5 && this.flipped !== this.targetFlipped) {
+			this.flipped = this.targetFlipped;
+		}
+
+		if (this.flippingProgress >= 1) {
+			this.flipping = false;
+		}
+	}
+
+	drawFlipping(ctx: CanvasRenderingContext2D, position: Position) {
+		const img = this.flipped ? this.face : this.back;
+		if (!img) return;
+		ctx.save();
+
+		const scaleX = Math.abs(1 - this.flippingProgress * 2);
+
+		ctx.translate(position.x + this.size.width / 2 + this.drawDelta.x, position.y + this.size.height / 2 + this.drawDelta.y);
+		ctx.scale(scaleX, 1);
+		ctx.drawImage(img, -this.size.width / 2, -this.size.height / 2, this.size.width, this.size.height);
+
+		ctx.restore();
+	}
+
 }
 
 export class Game {
@@ -114,7 +169,7 @@ export class Game {
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				this.grid[i][j] = new Card(img, undefined, {width: this.cellSize, height: this.cellSize})
+				this.grid[i][j] = new Card(img, img, {width: this.cellSize, height: this.cellSize})
 			}
 		}
 
