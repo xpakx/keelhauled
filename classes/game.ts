@@ -1,3 +1,8 @@
+export interface Size {
+	width: number;
+	height: number;
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
@@ -10,14 +15,24 @@ export class Game {
 	coord = {x: -1, y: -1};
 	mouseCoord = {x: -1, y: -1};
 
+	defaultCanvasSize: Size = {width: 800, height: 600};
+
 	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 		this.context = context;
 		this.canvas = canvas;
+		this.setCanvasSize(this.defaultCanvasSize);
+		canvas.width = 800;
+		canvas.height = 600;
 	}
 
 	nextFrame(_timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawGrid();
+	}
+
+	setCanvasSize(size: Size) {
+		this.canvas.width = size.width;
+		this.canvas.height = size.height;
 	}
 
 	drawGrid() {

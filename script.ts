@@ -12,8 +12,6 @@ window.onload = async () => {
 		return;
 	}
 
-	canvas.width = 800;
-	canvas.height = 600;
 	let game = new Game(context, canvas);
 
 	const frame = (timestamp: number) => {
