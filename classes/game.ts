@@ -16,6 +16,7 @@ export class Card {
 
 	shaking: boolean = false;
 	hovered: boolean = false;
+	flipped: boolean = false;
 
 	constructor(
 		back: HTMLImageElement | undefined,
@@ -43,7 +44,8 @@ export class Card {
 	}
 
 	draw(ctx: CanvasRenderingContext2D, position: Position) {
-		if (!this.back) {
+		const img = this.flipped ? this.face : this.back;
+		if (!img) {
 			if (this.hovered) {
 				ctx.fillRect(position.x, position.y, this.size.width, this.size.height)
 			} else {
@@ -53,12 +55,16 @@ export class Card {
 			return
 		}
 		ctx.drawImage(
-			this.back, 
+			img, 
 			position.x + this.drawDelta.x, 
 			position.y + this.drawDelta.y,
 			this.size.width,
 			this.size.height
 		);
+	}
+
+	revealCard() {
+		this.flipped = true;
 	}
 }
 
@@ -108,7 +114,7 @@ export class Game {
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				this.grid[i][j] = new Card(img, img, {width: this.cellSize, height: this.cellSize})
+				this.grid[i][j] = new Card(img, undefined, {width: this.cellSize, height: this.cellSize})
 			}
 		}
 
@@ -171,4 +177,13 @@ export class Game {
 		this.cellImageHidden = image;
 	}
 
+	onMouseLeftClick(event: MouseEvent) {
+		const rect = this.canvas.getBoundingClientRect();
+		this.mouseCoord.x = event.clientX - rect.left;
+		this.mouseCoord.y = event.clientY - rect.top;
+		const coord = this.mouseToGridCoord(this.mouseCoord);
+		if (coord) {
+			this.grid[coord.x][coord.y].revealCard();
+		} 
+	}
 }

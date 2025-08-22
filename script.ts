@@ -30,6 +30,12 @@ window.onload = async () => {
 	canvas.addEventListener('mousemove', function(event) {
 		game.onMouseMove(event);
 	});
+	canvas.addEventListener('mousedown', (event) => {
+		if(event.button == 0) {
+			game.onMouseLeftClick(event);
+		}
+	});
+
 }
 
 async function loadImage(url: string): Promise<HTMLImageElement> {
