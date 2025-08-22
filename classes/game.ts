@@ -3,19 +3,26 @@ export interface Size {
 	height: number;
 }
 
+export interface Position {
+	x: number;
+	y: number;
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
 	prevTimestamp: number = 0;
 	cellSize = 70;
 
-	gridWidth = 7;
-	gridHeight = 5;
-
-	coord = {x: -1, y: -1};
-	mouseCoord = {x: -1, y: -1};
+	coord: Position = {x: -1, y: -1};
+	mouseCoord: Position = {x: -1, y: -1};
 
 	defaultCanvasSize: Size = {width: 800, height: 600};
+
+	gridSize: Size = {width: 0, height: 0};
+	gridPixelSize: Size = {width: 0, height: 0};
+	gridOffset: Position = {x: 0, y:0};
+	gridEnd: Position = {x: 0, y:0};
 
 	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 		this.context = context;
@@ -23,6 +30,7 @@ export class Game {
 		this.setCanvasSize(this.defaultCanvasSize);
 		canvas.width = 800;
 		canvas.height = 600;
+		this.setGridSize({width: 7, height: 5});
 	}
 
 	nextFrame(_timestamp: number) {
@@ -35,17 +43,23 @@ export class Game {
 		this.canvas.height = size.height;
 	}
 
+	setGridSize(size: Size) {
+		this.gridSize = size;
+		this.gridPixelSize.width = this.cellSize*this.gridSize.width;
+		this.gridPixelSize.height = this.cellSize*this.gridSize.height;
+		this.gridOffset.x = (this.canvas.width - this.gridPixelSize.width) / 2;
+		this.gridOffset.y = (this.canvas.height - this.gridPixelSize.height) / 2;
+		this.gridEnd.x = this.gridOffset.x + this.gridSize.width*this.cellSize;
+		this.gridEnd.y = this.gridOffset.y + this.gridSize.height*this.cellSize;
+	}
+
 	drawGrid() {
 		this.context.save();
-		const gridPixelWidth = this.cellSize*this.gridWidth;
-		const gridPixelHeight = this.cellSize*this.gridHeight;
-		const offsetX = (this.canvas.width - gridPixelWidth) / 2;
-		const offsetY = (this.canvas.height - gridPixelHeight) / 2;
 
-		this.context.translate(offsetX + 0.5, offsetY + 0.5);
+		this.context.translate(this.gridOffset.x + 0.5, this.gridOffset.y + 0.5);
 
-		for (let i = 0; i < this.gridWidth; i++) {
-			for (let j = 0; j < this.gridHeight; j++) {
+		for (let i = 0; i < this.gridSize.width; i++) {
+			for (let j = 0; j < this.gridSize.height; j++) {
 				const x = i * this.cellSize;
 				const y = j * this.cellSize;
 				this.context.strokeRect(x, y, this.cellSize, this.cellSize)
@@ -61,7 +75,7 @@ export class Game {
 		const rect = this.canvas.getBoundingClientRect();
 		this.mouseCoord.x = event.clientX - rect.left;
 		this.mouseCoord.y = event.clientY - rect.top;
-		const coord = this.mouseToGridCoord(this.mouseCoord.x, this.mouseCoord.y);
+		const coord = this.mouseToGridCoord(this.mouseCoord);
 		if (coord) {
 			this.coord.x = coord.x;
 			this.coord.y = coord.y;
@@ -71,21 +85,16 @@ export class Game {
 		}
 	}
 
-	mouseToGridCoord(mouseX: number, mouseY: number) {
-		const gridPixelWidth = this.cellSize*this.gridWidth;
-		const gridPixelHeight = this.cellSize*this.gridHeight;
-		const offsetX = (this.canvas.width - gridPixelWidth) / 2;
-		const offsetY = (this.canvas.height - gridPixelHeight) / 2;
-		const endX = offsetX + this.gridWidth*this.cellSize;
-		const endY = offsetY + this.gridHeight*this.cellSize;
-		if (mouseX < offsetX || mouseY < offsetY) {
-			return
-		}
-		if (mouseX > endX || mouseY > endY) {
-			return
-		}
-		const mapX = Math.floor((mouseX - offsetX) / this.cellSize);
-		const mapY = Math.floor((mouseY - offsetY) / this.cellSize);
+	isPositionInGrid(position: Position): boolean {
+		if (position.x < this.gridOffset.x || position.y < this.gridOffset.y) return false;
+		if (position.x > this.gridEnd.x || position.y > this.gridEnd.y) return false;
+		return true;
+	}
+
+	mouseToGridCoord(mousePos: Position) {
+		if (!this.isPositionInGrid(mousePos)) return;
+		const mapX = Math.floor((mousePos.x - this.gridOffset.x) / this.cellSize);
+		const mapY = Math.floor((mousePos.y - this.gridOffset.y) / this.cellSize);
 		return {x: mapX, y: mapY};
 	}
 
