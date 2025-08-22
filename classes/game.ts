@@ -12,7 +12,7 @@ export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
 	prevTimestamp: number = 0;
-	cellSize = 70;
+	cellSize = 100;
 
 	coord: Position = {x: -1, y: -1};
 	mouseCoord: Position = {x: -1, y: -1};
@@ -23,6 +23,7 @@ export class Game {
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
 	gridEnd: Position = {x: 0, y:0};
+	cellImageHidden?: HTMLImageElement;
 
 	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 		this.context = context;
@@ -30,7 +31,7 @@ export class Game {
 		this.setCanvasSize(this.defaultCanvasSize);
 		canvas.width = 800;
 		canvas.height = 600;
-		this.setGridSize({width: 7, height: 5});
+		this.setGridSize({width: 5, height: 5});
 	}
 
 	nextFrame(_timestamp: number) {
@@ -62,9 +63,20 @@ export class Game {
 			for (let j = 0; j < this.gridSize.height; j++) {
 				const x = i * this.cellSize;
 				const y = j * this.cellSize;
-				this.context.strokeRect(x, y, this.cellSize, this.cellSize)
 				if (i == this.coord.x && j == this.coord.y) {
 					this.context.fillRect(x, y, this.cellSize, this.cellSize)
+				}
+				if (this.cellImageHidden) {
+					this.context.drawImage(
+						this.cellImageHidden, 
+						x, 
+						y,
+						this.cellSize,
+						this.cellSize
+					);
+
+				} else {
+					this.context.strokeRect(x, y, this.cellSize, this.cellSize)
 				}
 			}
 		}
@@ -96,6 +108,10 @@ export class Game {
 		const mapX = Math.floor((mousePos.x - this.gridOffset.x) / this.cellSize);
 		const mapY = Math.floor((mousePos.y - this.gridOffset.y) / this.cellSize);
 		return {x: mapX, y: mapY};
+	}
+
+	setCellImage(image: HTMLImageElement) {
+		this.cellImageHidden = image;
 	}
 
 }

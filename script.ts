@@ -13,6 +13,8 @@ window.onload = async () => {
 	}
 
 	let game = new Game(context, canvas);
+	const cardImage = await loadImage("images/card.png");
+	game.setCellImage(cardImage);
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);
@@ -28,3 +30,13 @@ window.onload = async () => {
 		game.onMouseMove(event);
 	});
 }
+
+async function loadImage(url: string): Promise<HTMLImageElement> {
+    const image = new Image();
+    image.src = url;
+    return new Promise((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+    });
+}
+
