@@ -3,6 +3,7 @@ import { Position } from "./game.js";
 
 export interface Animation {
 	name: string;
+	finished: boolean;
 	tick(timestamp: number, card: Card): undefined;
 	clean(card: Card): undefined;
 	draw?(ctx: CanvasRenderingContext2D, position: Position, card: Card): undefined;
@@ -12,6 +13,7 @@ export interface Animation {
 export class ShakingAnimation implements Animation {
 	name: string = "shaking"
 	amplitude: number = 1;
+	finished: boolean = false;
 
 	tick(timestamp: number, card: Card): undefined {
 		const amplitude = 1;
@@ -27,6 +29,7 @@ export class ShakingAnimation implements Animation {
 
 export class FlippingAnimation implements Animation {
 	name: string = "flipping"
+	finished: boolean = false;
 
 	flipStartTime: number = 0;
 	flipping: boolean = false;
@@ -62,6 +65,7 @@ export class FlippingAnimation implements Animation {
 
 		if (this.flippingProgress >= 1) {
 			this.flipping = false;
+			this.finished = true;
 		}
 	}
 
@@ -82,5 +86,6 @@ export class FlippingAnimation implements Animation {
 	init(): undefined {
 		if (this.flipping) return;
 		this.markForFlipping = true;
+		this.finished = false;
 	}
 }

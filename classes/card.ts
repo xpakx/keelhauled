@@ -30,7 +30,13 @@ export class Card {
 
 		if (this.hovered && !this.animation) this.animation = this.shakingAnimation;
 		else if (this.animation && this.animation.name == "shaking") this.animation = undefined;
-		if (this.animation) this.animation.tick(timestamp, this);
+		if (this.animation) {
+			this.animation.tick(timestamp, this);
+			if (this.animation.finished) {
+				this.animation.clean(this);
+				this.animation = undefined;
+			}
+		}
 
 	}
 
