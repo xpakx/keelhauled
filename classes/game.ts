@@ -36,6 +36,7 @@ export class Game {
 	gridOffset: Position = {x: 0, y:0};
 	gridEnd: Position = {x: 0, y:0};
 	cellImageHidden?: HTMLImageElement;
+	cellImage?: HTMLImageElement;
 
 	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 		this.context = context;
@@ -64,8 +65,12 @@ export class Game {
 			for (let j = 0; j < this.gridSize.height; j++) {
 				const card = new Card(img, img, {width: this.cellSize, height: this.cellSize})
 				this.grid[i][j] = card;
-				const zIndex = 0;
+				const zIndex = i + j*this.gridSize.width; // TODO
 				this.cards.push({card, coord: {x: i, y: j}, zIndex});
+
+				const x = -i * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
+				const y = -j * this.cellSize + this.gridSize.height*this.cellSize/2 - this.cellSize/2;
+				card.deal({x, y}, zIndex*150);
 			}
 		}
 		this.sortCards();
@@ -91,6 +96,7 @@ export class Game {
 			card.card.tick(timestamp, underCursor);
 			card.card.draw(this.context, {x, y});
 		}
+
 		this.context.restore();
 	}
 
@@ -123,6 +129,10 @@ export class Game {
 
 	setCellImage(image: HTMLImageElement) {
 		this.cellImageHidden = image;
+	}
+
+	setFaceImage(image: HTMLImageElement) {
+		this.cellImage = image;
 	}
 
 	onMouseLeftClick(event: MouseEvent) {

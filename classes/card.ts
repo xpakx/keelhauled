@@ -1,4 +1,4 @@
-import { Animation, FlippingAnimation, ShakingAnimation } from "./animation.js";
+import { Animation, DealingAnimation, FlippingAnimation, ShakingAnimation } from "./animation.js";
 import { Position, Size } from "./game.js";
 
 export class Card {
@@ -13,6 +13,7 @@ export class Card {
 	animation?: Animation;
 	shakingAnimation: Animation = new ShakingAnimation();
 	flippingAnimation: Animation = new FlippingAnimation();
+	dealingAnimation: DealingAnimation = new DealingAnimation();
 
 	constructor(
 		back: HTMLImageElement | undefined,
@@ -72,5 +73,10 @@ export class Card {
 	flipCard() {
 		this.animation = this.flippingAnimation;
 		if (this.animation.init) this.animation.init();
+	}
+
+	deal(delta: Position, animationDelta: number = 0) {
+		this.animation = this.dealingAnimation;
+		this.dealingAnimation.deal(delta, animationDelta);
 	}
 }

@@ -89,3 +89,61 @@ export class FlippingAnimation implements Animation {
 		this.finished = false;
 	}
 }
+
+export class DealingAnimation implements Animation {
+	name: string = "dealing"
+	finished: boolean = false;
+
+	dealt: boolean = true;
+
+	dealDuration: number = 300;
+	dealStart: number = 0;
+	markForDeal: boolean = false;
+	waitForDeal: number = 0;
+	dealDelta: Position = {x: 0, y: 0};
+
+	tick(timestamp: number, card: Card): undefined {
+		if (this.markForDeal) {
+			this.markForDeal = false;
+			this.dealStart = timestamp;
+			card.drawDelta.x = this.dealDelta.x;
+			card.drawDelta.y = this.dealDelta.y;
+			this.dealt = false;
+		}
+
+		if (this.waitForDeal > 0) {
+			const elapsed = timestamp - this.dealStart;
+			if (elapsed >= this.waitForDeal) {
+				this.waitForDeal = 0;
+				this.dealStart = timestamp;
+			}
+			return;
+		}
+		if (card.drawDelta.x == 0 && card.drawDelta.y == 0) {
+			this.finished = true;
+		} else {
+			const elapsed = timestamp - this.dealStart;
+			const progress = 1 - Math.min(elapsed / this.dealDuration, 1);
+			card.drawDelta.x = this.dealDelta.x*progress;
+			card.drawDelta.y = this.dealDelta.y*progress;
+		}
+	}
+
+	clean(card: Card): undefined {
+		card.drawDelta.x = 0;
+		card.drawDelta.y = 0;
+	}
+
+	init(): undefined {
+		this.markForDeal = true;
+		this.finished = false;
+	}
+
+	deal(delta: Position, animationDelta: number = 0) {
+		this.init();
+		this.dealDelta.x = delta.x;
+		this.dealDelta.y = delta.y;
+		this.waitForDeal = animationDelta;
+	}
+}
+
