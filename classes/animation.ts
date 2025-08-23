@@ -1,0 +1,86 @@
+import { Card } from "./card.js";
+import { Position } from "./game.js";
+
+export interface Animation {
+	name: string;
+	tick(timestamp: number, card: Card): undefined;
+	clean(card: Card): undefined;
+	draw?(ctx: CanvasRenderingContext2D, position: Position, card: Card): undefined;
+	init?(): undefined;
+}
+
+export class ShakingAnimation implements Animation {
+	name: string = "shaking"
+	amplitude: number = 1;
+
+	tick(timestamp: number, card: Card): undefined {
+		const amplitude = 1;
+		card.drawDelta.x = Math.sin(timestamp * 0.02) * amplitude;
+		card.drawDelta.y = Math.cos(timestamp * 0.03) * amplitude;
+	}
+
+	clean(card: Card): undefined {
+		card.drawDelta.x = 0;
+		card.drawDelta.y = 0;
+	}
+}
+
+export class FlippingAnimation implements Animation {
+	name: string = "flipping"
+
+	flipStartTime: number = 0;
+	flipping: boolean = false;
+	flipDuration: number = 300;
+	flippingProgress: number = 0;
+	targetFlipped: boolean = false;
+	markForFlipping: boolean = false;
+
+	tick(timestamp: number, card: Card): undefined {
+		if (this.markForFlipping) {
+			console.log("Starting flipping");
+			this.targetFlipped = !card.flipped;
+			this.flipping = true;
+			this.flipStartTime = timestamp;
+			this.flippingProgress = 0;
+			this.markForFlipping = false;
+		}
+		if (this.flipping) this.progressFlipping(timestamp, card)
+	}
+
+	clean(card: Card): undefined {
+		card.drawDelta.x = 0;
+		card.drawDelta.y = 0;
+	}
+
+	progressFlipping(timestamp: number, card: Card) {
+		const elapsed = timestamp - this.flipStartTime;
+		this.flippingProgress = Math.min(elapsed / this.flipDuration, 1);
+
+		if (this.flippingProgress >= 0.5 && card.flipped !== this.targetFlipped) {
+			card.flipped = this.targetFlipped;
+		}
+
+		if (this.flippingProgress >= 1) {
+			this.flipping = false;
+		}
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position: Position, card: Card): undefined {
+		const img = card.flipped ? card.face : card.back;
+		if (!img) return;
+		ctx.save();
+
+		const scaleX = Math.abs(1 - this.flippingProgress * 2);
+
+		ctx.translate(position.x + card.size.width / 2, position.y + card.size.height / 2);
+		ctx.scale(scaleX, 1);
+		ctx.drawImage(img, -card.size.width / 2, -card.size.height / 2, card.size.width, card.size.height);
+
+		ctx.restore();
+	}
+
+	init(): undefined {
+		if (this.flipping) return;
+		this.markForFlipping = true;
+	}
+}
