@@ -65,12 +65,20 @@ export class Game {
 			for (let j = 0; j < this.gridSize.height; j++) {
 				const card = new Card(img, img, {width: this.cellSize, height: this.cellSize})
 				this.grid[i][j] = card;
-				const zIndex = i + j*this.gridSize.width; // TODO
-				this.cards.push({card, coord: {x: i, y: j}, zIndex});
 
 				const x = -i * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
 				const y = -j * this.cellSize + this.gridSize.height*this.cellSize/2 - this.cellSize/2;
-				card.deal({x, y}, zIndex*150);
+
+
+				const cx = (this.gridSize.width - 1) / 2;
+				const cy = (this.gridSize.height - 1) / 2;
+
+				const zIndex = Math.abs(i - cx) + Math.abs(j - cy);
+				const maxDist = Math.abs(cx) + Math.abs(cy);
+
+				this.cards.push({card, coord: {x: i, y: j}, zIndex});
+
+				card.deal({x, y}, (maxDist-zIndex)*300);
 			}
 		}
 		this.sortCards();
