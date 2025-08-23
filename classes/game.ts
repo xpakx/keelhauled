@@ -8,15 +8,102 @@ export interface Position {
 	y: number;
 }
 
+export interface Animation {
+	name: string;
+	tick(timestamp: number, card: Card): undefined;
+	clean(card: Card): undefined;
+	draw?(ctx: CanvasRenderingContext2D, position: Position, card: Card): undefined;
+	init?(): undefined;
+}
+
+export class ShakingAnimation implements Animation {
+	name: string = "shaking"
+	amplitude: number = 1;
+
+	tick(timestamp: number, card: Card): undefined {
+		const amplitude = 1;
+		card.drawDelta.x = Math.sin(timestamp * 0.02) * amplitude;
+		card.drawDelta.y = Math.cos(timestamp * 0.03) * amplitude;
+	}
+
+	clean(card: Card): undefined {
+		card.drawDelta.x = 0;
+		card.drawDelta.y = 0;
+	}
+}
+
+export class FlippingAnimation implements Animation {
+	name: string = "flipping"
+
+	flipStartTime: number = 0;
+	flipping: boolean = false;
+	flipDuration: number = 300;
+	flippingProgress: number = 0;
+	targetFlipped: boolean = false;
+	markForFlipping: boolean = false;
+
+	tick(timestamp: number, card: Card): undefined {
+		if (this.markForFlipping) {
+			console.log("Starting flipping");
+			this.targetFlipped = !card.flipped;
+			this.flipping = true;
+			this.flipStartTime = timestamp;
+			this.flippingProgress = 0;
+			this.markForFlipping = false;
+		}
+		if (this.flipping) this.progressFlipping(timestamp, card)
+	}
+
+	clean(card: Card): undefined {
+		card.drawDelta.x = 0;
+		card.drawDelta.y = 0;
+	}
+
+	progressFlipping(timestamp: number, card: Card) {
+		const elapsed = timestamp - this.flipStartTime;
+		this.flippingProgress = Math.min(elapsed / this.flipDuration, 1);
+
+		if (this.flippingProgress >= 0.5 && card.flipped !== this.targetFlipped) {
+			card.flipped = this.targetFlipped;
+		}
+
+		if (this.flippingProgress >= 1) {
+			this.flipping = false;
+		}
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position: Position, card: Card): undefined {
+		const img = card.flipped ? card.face : card.back;
+		if (!img) return;
+		ctx.save();
+
+		const scaleX = Math.abs(1 - this.flippingProgress * 2);
+
+		ctx.translate(position.x + card.size.width / 2, position.y + card.size.height / 2);
+		ctx.scale(scaleX, 1);
+		ctx.drawImage(img, -card.size.width / 2, -card.size.height / 2, card.size.width, card.size.height);
+
+		ctx.restore();
+	}
+
+	init(): undefined {
+		if (this.flipping) return;
+		this.markForFlipping = true;
+	}
+}
+
 export class Card {
 	back?: HTMLImageElement;
 	face?: HTMLImageElement;
 	size: Size;
 	drawDelta: Position;
 
-	shaking: boolean = false;
 	hovered: boolean = false;
 	flipped: boolean = false;
+
+	animation?: Animation;
+	shakingAnimation: Animation = new ShakingAnimation();
+	flippingAnimation: Animation = new FlippingAnimation();
 
 	constructor(
 		back: HTMLImageElement | undefined,
@@ -30,26 +117,12 @@ export class Card {
 	}
 
 	tick(timestamp: number, hovered: boolean) {
-		this.shaking = hovered;
 		this.hovered = hovered;
 
-		if (this.shaking) {
-			const amplitude = 1;
-			this.drawDelta.x = Math.sin(timestamp * 0.02) * amplitude;
-			this.drawDelta.y = Math.cos(timestamp * 0.03) * amplitude;
-		} else {
-			this.drawDelta.x = 0;
-			this.drawDelta.y = 0;
-		}
-		if (this.markForFlipping) {
-			console.log("Starting flipping");
-			this.targetFlipped = !this.flipped;
-			this.flipping = true;
-			this.flipStartTime = timestamp;
-			this.flippingProgress = 0;
-			this.markForFlipping = false;
-		}
-		if (this.flipping) this.progressFlipping(timestamp)
+		if (this.hovered && !this.animation) this.animation = this.shakingAnimation;
+		else if (this.animation && this.animation.name == "shaking") this.animation = undefined;
+		if (this.animation) this.animation.tick(timestamp, this);
+
 	}
 
 	draw(ctx: CanvasRenderingContext2D, position: Position) {
@@ -63,17 +136,17 @@ export class Card {
 
 			return
 		}
-		if (this.flipping) {
-			this.drawFlipping(ctx, position);
-			return;
+		if (this.animation && this.animation.draw) {
+			this.animation.draw(ctx, position, this);
+		} else {
+			ctx.drawImage(
+				img, 
+				position.x + this.drawDelta.x, 
+				position.y + this.drawDelta.y,
+				this.size.width,
+				this.size.height
+			);
 		}
-		ctx.drawImage(
-			img, 
-			position.x + this.drawDelta.x, 
-			position.y + this.drawDelta.y,
-			this.size.width,
-			this.size.height
-		);
 	}
 
 	revealCard() {
@@ -82,45 +155,9 @@ export class Card {
 	}
 
 	flipCard() {
-		if (this.flipping) return;
-		this.markForFlipping = true;
+		this.animation = this.flippingAnimation;
+		if (this.animation.init) this.animation.init();
 	}
-
-
-	flipStartTime: number = 0;
-	flipping: boolean = false;
-	flipDuration: number = 300;
-	flippingProgress: number = 0;
-	targetFlipped: boolean = false;
-	markForFlipping: boolean = false;
-
-	progressFlipping(timestamp: number) {
-		const elapsed = timestamp - this.flipStartTime;
-		this.flippingProgress = Math.min(elapsed / this.flipDuration, 1);
-
-		if (this.flippingProgress >= 0.5 && this.flipped !== this.targetFlipped) {
-			this.flipped = this.targetFlipped;
-		}
-
-		if (this.flippingProgress >= 1) {
-			this.flipping = false;
-		}
-	}
-
-	drawFlipping(ctx: CanvasRenderingContext2D, position: Position) {
-		const img = this.flipped ? this.face : this.back;
-		if (!img) return;
-		ctx.save();
-
-		const scaleX = Math.abs(1 - this.flippingProgress * 2);
-
-		ctx.translate(position.x + this.size.width / 2 + this.drawDelta.x, position.y + this.size.height / 2 + this.drawDelta.y);
-		ctx.scale(scaleX, 1);
-		ctx.drawImage(img, -this.size.width / 2, -this.size.height / 2, this.size.width, this.size.height);
-
-		ctx.restore();
-	}
-
 }
 
 export class Game {
@@ -137,7 +174,6 @@ export class Game {
 	gridSize: Size = {width: 0, height: 0};
 
 	grid: Card[][] = [];
-
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
