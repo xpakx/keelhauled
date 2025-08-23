@@ -10,6 +10,12 @@ export interface Position {
 	y: number;
 }
 
+export interface CardContainer {
+	card: Card;
+	coord: Position;
+	zIndex: number;
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
@@ -24,6 +30,7 @@ export class Game {
 	gridSize: Size = {width: 0, height: 0};
 
 	grid: Card[][] = [];
+	cards: CardContainer[] = [];
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
@@ -55,9 +62,13 @@ export class Game {
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				this.grid[i][j] = new Card(img, img, {width: this.cellSize, height: this.cellSize})
+				const card = new Card(img, img, {width: this.cellSize, height: this.cellSize})
+				this.grid[i][j] = card;
+				const zIndex = 0;
+				this.cards.push({card, coord: {x: i, y: j}, zIndex});
 			}
 		}
+		this.sortCards();
 
 		this.gridSize = size;
 		this.gridPixelSize.width = this.cellSize*this.gridSize.width;
@@ -73,19 +84,15 @@ export class Game {
 
 		this.context.translate(this.gridOffset.x + 0.5, this.gridOffset.y + 0.5);
 
-		for (let i = 0; i < this.gridSize.width; i++) {
-			for (let j = 0; j < this.gridSize.height; j++) {
-				const x = i * this.cellSize;
-				const y = j * this.cellSize;
-				const underCursor = i == this.coord.x && j == this.coord.y;
-				const card = this.grid[i][j];
-				card.tick(timestamp, underCursor);
-				card.draw(this.context, {x, y});
-			}
+		for (let card of this.cards) {
+			const x = card.coord.x * this.cellSize;
+			const y = card.coord.y * this.cellSize;
+			const underCursor = card.coord.x == this.coord.x && card.coord.y == this.coord.y;
+			card.card.tick(timestamp, underCursor);
+			card.card.draw(this.context, {x, y});
 		}
 		this.context.restore();
 	}
-
 
 	onMouseMove(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
@@ -126,5 +133,11 @@ export class Game {
 		if (coord) {
 			this.grid[coord.x][coord.y].revealCard();
 		} 
+	}
+
+	sortCards() {
+		this.cards.sort((a, b) => {
+			return a.zIndex - b.zIndex;
+		});
 	}
 }
