@@ -94,8 +94,6 @@ export class DealingAnimation implements Animation {
 	name: string = "dealing"
 	finished: boolean = false;
 
-	dealt: boolean = true;
-
 	dealDuration: number = 300;
 	dealStart: number = 0;
 	markForDeal: boolean = false;
@@ -108,7 +106,6 @@ export class DealingAnimation implements Animation {
 			this.dealStart = timestamp;
 			card.drawDelta.x = this.dealDelta.x;
 			card.drawDelta.y = this.dealDelta.y;
-			this.dealt = false;
 		}
 
 		if (this.waitForDeal > 0) {
@@ -132,6 +129,7 @@ export class DealingAnimation implements Animation {
 	clean(card: Card): undefined {
 		card.drawDelta.x = 0;
 		card.drawDelta.y = 0;
+		card.dealt = true;
 	}
 
 	init(): undefined {

@@ -6,6 +6,7 @@ export class Card {
 	face?: HTMLImageElement;
 	size: Size;
 	drawDelta: Position;
+	dealt: boolean = false;
 
 	hovered: boolean = false;
 	flipped: boolean = false;
@@ -74,6 +75,7 @@ export class Card {
 	}
 
 	flipCard() {
+		if (!this.dealt) return;
 		this.animation = this.flippingAnimation;
 		if (this.animation.init) this.animation.init();
 	}
