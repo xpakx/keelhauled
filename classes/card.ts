@@ -26,17 +26,20 @@ export class Card {
 		this.drawDelta = {x: 0, y: 0};
 	}
 
+	removeAnimation() {
+		this.animation?.clean(this);
+		this.animation = undefined;
+	}
+
 	tick(timestamp: number, hovered: boolean) {
 		this.hovered = hovered;
 
 		if (this.hovered && !this.animation) this.animation = this.shakingAnimation;
-		else if (this.animation && this.animation.name == "shaking") this.animation = undefined;
+		else if (!this.hovered && this.animation && this.animation.name == "shaking") this.removeAnimation();
+
 		if (this.animation) {
 			this.animation.tick(timestamp, this);
-			if (this.animation.finished) {
-				this.animation.clean(this);
-				this.animation = undefined;
-			}
+			if (this.animation.finished) this.removeAnimation();
 		}
 
 	}
