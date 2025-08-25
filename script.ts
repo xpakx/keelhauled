@@ -38,6 +38,11 @@ window.onload = async () => {
 			game.onMouseLeftClick(event);
 		}
 	});
+	canvas.addEventListener('mouseup', (event) => {
+		if(event.button == 0) {
+			game.onMouseLeftClickRelease(event);
+		}
+	});
 
 }
 

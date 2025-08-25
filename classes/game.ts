@@ -52,7 +52,15 @@ export class Game {
 	nextFrame(timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawGrid(timestamp);
+		this.hand.tick(timestamp);
 		this.hand.draw(this.context);
+		if (this.hand.dragging && this.hand.selectedCard) {
+			const pos = {
+				x: this.mouseCoord.x - this.hand.selectedCard.size.width/2, 
+				y: this.mouseCoord.y - this.hand.selectedCard.size.height/2
+			};
+			this.hand.selectedCard?.draw(this.context, pos);
+		}
 	}
 
 	setCanvasSize(size: Size) {
@@ -154,7 +162,16 @@ export class Game {
 		const coord = this.mouseToGridCoord(this.mouseCoord);
 		if (coord) {
 			this.grid[coord.x][coord.y].revealCard();
-		} 
+		} else {
+			this.hand.onMouseLeftClick(this.mouseCoord);
+		}
+	}
+
+	onMouseLeftClickRelease(event: MouseEvent) {
+		const rect = this.canvas.getBoundingClientRect();
+		this.mouseCoord.x = event.clientX - rect.left;
+		this.mouseCoord.y = event.clientY - rect.top;
+		this.hand.onLeftMouseClickRelease(this.mouseCoord);
 	}
 
 	sortCards() {
