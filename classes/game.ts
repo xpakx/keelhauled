@@ -16,6 +16,43 @@ export interface CardContainer {
 	zIndex: number;
 }
 
+export class Hand {
+	cards: Card[] = [];
+	position: Position = {x: 0, y: 0};
+	size: Size = {height: 150, width: 800};
+	
+	calculatePosition(canvasSize: Size) {
+		const widthMargin = Math.abs((this.size.width - canvasSize.width)/2)
+		this.position.x = widthMargin;
+		this.position.y = canvasSize.height - this.size.height;
+	}
+
+	draw(ctx: CanvasRenderingContext2D) {
+		this.drawCards(ctx);
+	}
+
+	addCard(card: Card) {
+		card.flipped = true;
+		this.cards.push(card);
+	}
+
+	drawCards(ctx: CanvasRenderingContext2D) {
+		ctx.save();
+		const cardsLength = this.cards.length * 100;
+		const padding = Math.abs((cardsLength - this.size.width)/2)
+		ctx.translate(this.position.x + padding, this.position.y);
+		let i = 0;
+		for (let card of this.cards) {
+			card.draw(ctx, {
+				x: i*100,
+				y: 0,
+			});
+			i++;
+		}
+		ctx.restore();
+	}
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
@@ -31,6 +68,7 @@ export class Game {
 
 	grid: Card[][] = [];
 	cards: CardContainer[] = [];
+	hand: Hand;
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
@@ -45,11 +83,17 @@ export class Game {
 		canvas.width = 800;
 		canvas.height = 600;
 		this.setGridSize({width: 5, height: 5});
+		this.hand = new Hand();
+		this.hand.calculatePosition(this.defaultCanvasSize);
+		this.hand.addCard(
+			new Card(undefined, undefined, {width: this.cellSize, height: this.cellSize})
+		);
 	}
 
 	nextFrame(timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawGrid(timestamp);
+		this.hand.draw(this.context);
 	}
 
 	setCanvasSize(size: Size) {
