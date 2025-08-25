@@ -19,9 +19,9 @@ export interface CardContainer {
 export class Hand {
 	cards: Card[] = [];
 	position: Position = {x: 0, y: 0};
-	size: Size = {height: 150, width: 800};
+	size: Size = {height: 120, width: 800};
 
-	realSize: Size = {height: 150, width: 800};
+	realSize: Size = {height: 120, width: 800};
 	
 	calculatePosition(canvasSize: Size) {
 		const widthMargin = Math.abs((this.size.width - canvasSize.width)/2)
@@ -70,7 +70,7 @@ export class Game {
 	coord: Position = {x: -1, y: -1};
 	mouseCoord: Position = {x: -1, y: -1};
 
-	defaultCanvasSize: Size = {width: 800, height: 600};
+	defaultCanvasSize: Size = {width: 800, height: 800};
 
 	gridSize: Size = {width: 0, height: 0};
 
@@ -88,8 +88,6 @@ export class Game {
 		this.context = context;
 		this.canvas = canvas;
 		this.setCanvasSize(this.defaultCanvasSize);
-		canvas.width = 800;
-		canvas.height = 600;
 		this.setGridSize({width: 5, height: 5});
 		this.hand = new Hand();
 		this.hand.calculatePosition(this.defaultCanvasSize);
