@@ -18,6 +18,7 @@ window.onload = async () => {
 	game.setCellImage(cardImage);
 	game.setFaceImage(faceImage);
 	game.setGridSize({width: 5, height: 5});
+	game.__debugAddHand();
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);

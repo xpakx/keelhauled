@@ -1,4 +1,5 @@
 import { Card } from "./card.js";
+import { Hand } from "./hand.js";
 
 export interface Size {
 	width: number;
@@ -14,51 +15,6 @@ export interface CardContainer {
 	card: Card;
 	coord: Position;
 	zIndex: number;
-}
-
-export class Hand {
-	cards: Card[] = [];
-	position: Position = {x: 0, y: 0};
-	size: Size = {height: 120, width: 800};
-
-	realSize: Size = {height: 120, width: 800};
-	
-	calculatePosition(canvasSize: Size) {
-		const widthMargin = Math.abs((this.size.width - canvasSize.width)/2)
-		this.position.x = widthMargin;
-		this.position.y = canvasSize.height - this.size.height;
-	}
-
-	draw(ctx: CanvasRenderingContext2D) {
-		this.drawCards(ctx);
-	}
-
-	addCard(card: Card) {
-		card.flipped = true;
-		this.cards.push(card);
-		this.calculateRealHandSize();
-	}
-
-	calculateRealHandSize() {
-		let cardsLength = 0;
-		for (let card of this.cards) cardsLength += card.size.width;
-		this.realSize.width = cardsLength;
-	}
-
-	drawCards(ctx: CanvasRenderingContext2D) {
-		ctx.save();
-		const padding = Math.abs((this.realSize.width - this.size.width)/2)
-		ctx.translate(this.position.x + padding, this.position.y);
-		let i = 0;
-		for (let card of this.cards) {
-			card.draw(ctx, {
-				x: i*100,
-				y: 0,
-			});
-			i++;
-		}
-		ctx.restore();
-	}
 }
 
 export class Game {
@@ -91,9 +47,6 @@ export class Game {
 		this.setGridSize({width: 5, height: 5});
 		this.hand = new Hand();
 		this.hand.calculatePosition(this.defaultCanvasSize);
-		this.hand.addCard(
-			new Card(undefined, undefined, {width: this.cellSize, height: this.cellSize})
-		);
 	}
 
 	nextFrame(timestamp: number) {
@@ -208,5 +161,11 @@ export class Game {
 		this.cards.sort((a, b) => {
 			return a.zIndex - b.zIndex;
 		});
+	}
+
+	__debugAddHand() {
+		this.hand.addCard(
+			new Card(this.cellImageHidden, this.cellImage, {width: this.cellSize, height: this.cellSize})
+		);
 	}
 }
