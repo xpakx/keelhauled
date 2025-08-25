@@ -20,6 +20,8 @@ export class Hand {
 	cards: Card[] = [];
 	position: Position = {x: 0, y: 0};
 	size: Size = {height: 150, width: 800};
+
+	realSize: Size = {height: 150, width: 800};
 	
 	calculatePosition(canvasSize: Size) {
 		const widthMargin = Math.abs((this.size.width - canvasSize.width)/2)
@@ -34,12 +36,18 @@ export class Hand {
 	addCard(card: Card) {
 		card.flipped = true;
 		this.cards.push(card);
+		this.calculateRealHandSize();
+	}
+
+	calculateRealHandSize() {
+		let cardsLength = 0;
+		for (let card of this.cards) cardsLength += card.size.width;
+		this.realSize.width = cardsLength;
 	}
 
 	drawCards(ctx: CanvasRenderingContext2D) {
 		ctx.save();
-		const cardsLength = this.cards.length * 100;
-		const padding = Math.abs((cardsLength - this.size.width)/2)
+		const padding = Math.abs((this.realSize.width - this.size.width)/2)
 		ctx.translate(this.position.x + padding, this.position.y);
 		let i = 0;
 		for (let card of this.cards) {
