@@ -6,12 +6,10 @@ export class Hand {
 	position: Position = {x: 0, y: 0};
 	size: Size = {height: 120, width: 800};
 	selectedCard: Card | undefined;
-	selectionTime: number = 0;
+	selectionPosition: Position = {x: 0, y: 0};
 	dragging: boolean = false;
-	markForSelection: boolean = false;
 
 	realSize: Size = {height: 120, width: 800};
-	draggingDelay = 150;
 	
 	calculatePosition(canvasSize: Size) {
 		const widthMargin = Math.abs((this.size.width - canvasSize.width)/2)
@@ -52,14 +50,14 @@ export class Hand {
 		ctx.restore();
 	}
 
-	tick(timestamp: number) {
+	tick(timestamp: number, position: Position) {
 		for (let card of this.cards) card.tick(timestamp, false);
 
-		if (this.markForSelection)  {
-			this.selectionTime = timestamp;
-			this.markForSelection = false;
-		}
-		if (timestamp - this.selectionTime > this.draggingDelay && this.selectedCard) this.dragging = true;;
+		if (this.selectedCard && this.distance(position, this.selectionPosition) > 10) this.dragging = true;
+	}
+
+	distance(p1: Position, p2: Position): number {
+		return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
 	}
 
 	onMouseLeftClick(position: Position) {
@@ -72,14 +70,14 @@ export class Hand {
 			const yEnd = yStart + card.size.height;
 			if (xStart <= position.x && position.x <= xEnd && yStart <= position.y && position.y <= yEnd) {
 				this.selectedCard = card;
-				this.markForSelection = true;
+				this.selectionPosition.x = position.x;
+				this.selectionPosition.y = position.y;
 			}
 		}
 	}
 
 	onLeftMouseClickRelease(_position: Position) {
 		if (!this.dragging) this.selectedCard?.flipCard();
-		this.markForSelection = false;
 		this.dragging = false;
 		this.selectedCard = undefined;
 	}

@@ -52,7 +52,7 @@ export class Game {
 	nextFrame(timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawGrid(timestamp);
-		this.hand.tick(timestamp);
+		this.hand.tick(timestamp, this.mouseCoord);
 		this.hand.draw(this.context);
 		if (this.hand.dragging && this.hand.selectedCard) {
 			const pos = {
