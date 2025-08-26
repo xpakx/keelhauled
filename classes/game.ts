@@ -49,7 +49,6 @@ export class Game {
 		this.canvas = canvas;
 		this.cardLib = cardLib;
 		this.setCanvasSize(this.defaultCanvasSize);
-		this.setGridSize({width: 5, height: 5});
 		this.hand = new Hand();
 		this.hand.calculatePosition(this.defaultCanvasSize);
 	}
@@ -74,7 +73,9 @@ export class Game {
 	}
 
 	setGridSize(size: Size) {
-		this.grid = Array(size.width);
+		this.gridSize = size;
+
+		this.grid = Array(this.gridSize.width);
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
@@ -99,7 +100,6 @@ export class Game {
 		}
 		this.sortCards();
 
-		this.gridSize = size;
 		this.gridPixelSize.width = this.cellSize*this.gridSize.width;
 		this.gridPixelSize.height = this.cellSize*this.gridSize.height;
 		this.gridOffset.x = (this.canvas.width - this.gridPixelSize.width) / 2;
