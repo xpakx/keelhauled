@@ -1,3 +1,4 @@
+import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
 
 window.onload = async () => {
@@ -12,11 +13,13 @@ window.onload = async () => {
 		return;
 	}
 
-	let game = new Game(context, canvas);
+	let cardLib = new CardLibrary();
 	const cardImage = await loadImage("images/card.png");
 	const faceImage = await loadImage("images/empty.png");
-	game.setCellImage(cardImage);
-	game.setFaceImage(faceImage);
+	cardLib.setDefaultReverse(cardImage);
+	cardLib.registerDefinition("empty", faceImage);
+
+	let game = new Game(context, canvas, cardLib);
 	game.setGridSize({width: 5, height: 5});
 	game.__debugAddHand();
 

@@ -1,3 +1,4 @@
+import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
 import { Hand } from "./hand.js";
 
@@ -20,6 +21,7 @@ export interface CardContainer {
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
+	cardLib: CardLibrary;
 	prevTimestamp: number = 0;
 	cellSize = 100;
 
@@ -37,12 +39,15 @@ export class Game {
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
 	gridEnd: Position = {x: 0, y:0};
-	cellImageHidden?: HTMLImageElement;
-	cellImage?: HTMLImageElement;
 
-	constructor(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+	constructor(
+		context: CanvasRenderingContext2D, 
+		canvas: HTMLCanvasElement,
+		cardLib: CardLibrary,
+	) {
 		this.context = context;
 		this.canvas = canvas;
+		this.cardLib = cardLib;
 		this.setCanvasSize(this.defaultCanvasSize);
 		this.setGridSize({width: 5, height: 5});
 		this.hand = new Hand();
@@ -69,13 +74,12 @@ export class Game {
 	}
 
 	setGridSize(size: Size) {
-		const img = this.cellImageHidden;
-		const img2 = this.cellImage;
 		this.grid = Array(size.width);
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				const card = new Card(img, img2, {width: this.cellSize, height: this.cellSize})
+				const card = this.cardLib.getCard("empty");
+				if (!card) continue;
 				this.grid[i][j] = card;
 
 				const x = -i * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
@@ -147,14 +151,6 @@ export class Game {
 		return {x: mapX, y: mapY};
 	}
 
-	setCellImage(image: HTMLImageElement) {
-		this.cellImageHidden = image;
-	}
-
-	setFaceImage(image: HTMLImageElement) {
-		this.cellImage = image;
-	}
-
 	onMouseLeftClick(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
 		this.mouseCoord.x = event.clientX - rect.left;
@@ -181,8 +177,6 @@ export class Game {
 	}
 
 	__debugAddHand() {
-		this.hand.addCard(
-			new Card(this.cellImageHidden, this.cellImage, {width: this.cellSize, height: this.cellSize})
-		);
+		this.hand.addCard(this.cardLib.getCard("empty")!);
 	}
 }
