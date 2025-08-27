@@ -6,7 +6,12 @@ export interface CardDefintion {
 	face?: HTMLImageElement;
 }
 
-export class CardLibrary {
+export interface CardProducer {
+	getCard(name: string): Card | undefined;
+	getRandomCard(): Card | undefined;
+}
+
+export class CardLibrary implements CardProducer {
 	private cardDefinitions: Map<string, CardDefintion>;
 	private defaultReverse?: HTMLImageElement;
 	private defaultCardSize: Size = {width: 100, height: 100};
@@ -44,5 +49,11 @@ export class CardLibrary {
 
 	clearLibrary() {
 		this.cardDefinitions.clear();
+	}
+
+	getRandomCard(): Card | undefined {
+		const keys = Array.from(this.cardDefinitions.keys());
+		const randomKey = keys[Math.floor(Math.random() * keys.length)];
+		return this.getCard(randomKey);
 	}
 }
