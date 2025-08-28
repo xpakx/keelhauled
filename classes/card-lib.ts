@@ -56,4 +56,8 @@ export class CardLibrary implements CardProducer {
 		const randomKey = keys[Math.floor(Math.random() * keys.length)];
 		return this.getCard(randomKey);
 	}
+
+	getKeys(): string[] {
+		return Array.from(this.cardDefinitions.keys());
+	}
 }
