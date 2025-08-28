@@ -1,3 +1,4 @@
+import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
 import { Game, Position, Size } from "./game.js";
 
@@ -10,9 +11,14 @@ export interface Rules {
 	getState?(): string;
 }
 
+export interface CardLoader {
+	load(cardLib: CardLibrary): Promise<undefined>;
+}
+
 export class DebugRules implements Rules {
 	init(game: Game): void {
 		game.setGridSize({width: 5, height: 5});
+		game.__debugAddHand();
 	}
 
 	onCardClick(_game: Game, card: Card, _coord?: Position): void {
@@ -29,6 +35,24 @@ export class DebugRules implements Rules {
 
 	drawCard(): string | undefined {
 	    return "empty";
+	}
+}
+
+export class DefaultCardLoader implements CardLoader {
+	async load(cardLib: CardLibrary): Promise<undefined> {
+		const cardImage = await this.loadImage("images/card.png");
+		const faceImage = await this.loadImage("images/empty.png");
+		cardLib.setDefaultReverse(cardImage);
+		cardLib.registerDefinition("empty", faceImage);
+	}
+
+	async loadImage(url: string): Promise<HTMLImageElement> {
+		const image = new Image();
+		image.src = url;
+		return new Promise((resolve, reject) => {
+			image.onload = () => resolve(image);
+			image.onerror = reject;
+		});
 	}
 }
 
@@ -107,6 +131,53 @@ export class PairsMemoryGameRules implements Rules {
 
 	drawCard(): string | undefined {
 		return this.cardsInGame.pop();
+	}
+
+}
+
+
+export class PairGameCardLoader extends DefaultCardLoader implements CardLoader {
+	async load(cardLib: CardLibrary): Promise<undefined> {
+		const cardImage = await this.loadImage("images/card.png");
+		const faceImage = await this.loadImage("images/empty.png");
+		cardLib.setDefaultReverse(cardImage);
+		cardLib.registerDefinition("empty", faceImage);
+
+		const colors = ["red", "blue", "green", "yellow", "magenta", "cyan", "black", "gray"];
+		for (let color of colors) {
+			const image = this.createCardImage(
+				faceImage,
+				color,
+				{width: 100, height: 100}
+			);
+			cardLib.registerDefinition(color, image);
+		}
+	}
+
+
+	createCardImage(
+		emptyCard: HTMLImageElement,
+		color: string = "#000000",
+			size: Size,
+	): HTMLImageElement {
+		const canvas = new OffscreenCanvas(size.width, size.height);
+		canvas.width = size.width;
+		canvas.height = size.height;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) throw new Error("No 2D context!");
+
+		ctx.drawImage(emptyCard, 0, 0, size.width, size.height);
+
+		ctx.fillStyle = color;
+		ctx.fillRect(10, 10, size.width - 20, size.height - 20);
+
+		const img = new Image();
+		canvas.convertToBlob().then(blob => {
+			const url = URL.createObjectURL(blob);
+			img.src = url;
+		});
+
+		return img;
 	}
 
 }

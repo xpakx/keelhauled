@@ -1,6 +1,6 @@
 import { CardLibrary } from "./classes/card-lib.js";
-import { Game, Size } from "./classes/game.js";
-import { PairsMemoryGameRules } from "./classes/rules.js";
+import { Game } from "./classes/game.js";
+import { PairGameCardLoader, PairsMemoryGameRules } from "./classes/rules.js";
 
 window.onload = async () => {
 	const canvas = document.getElementById('gameCanvas') as (HTMLCanvasElement | null);
@@ -15,22 +15,10 @@ window.onload = async () => {
 	}
 
 	let cardLib = new CardLibrary();
-	const cardImage = await loadImage("images/card.png");
-	const faceImage = await loadImage("images/empty.png");
-	cardLib.setDefaultReverse(cardImage);
-	cardLib.registerDefinition("empty", faceImage);
-	const colors = ["red", "blue", "green", "yellow", "magenta", "cyan", "black", "gray"];
-	for (let color of colors) {
-		const image = createCardImage(
-			faceImage,
-			color,
-			{width: 100, height: 100}
-		);
-		cardLib.registerDefinition(color, image);
-	}
+	let cardLoader = new PairGameCardLoader();
+	await cardLoader.load(cardLib);
 
 	let game = new Game(context, canvas, cardLib, new PairsMemoryGameRules());
-	game.__debugAddHand();
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);
@@ -66,29 +54,3 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
         image.onerror = reject;
     });
 }
-
-function createCardImage(
-	emptyCard: HTMLImageElement,
-	color: string = "#000000",
-	size: Size,
-): HTMLImageElement {
-	const canvas = new OffscreenCanvas(size.width, size.height);
-	canvas.width = size.width;
-	canvas.height = size.height;
-	const ctx = canvas.getContext("2d");
-	if (!ctx) throw new Error("No 2D context!");
-
-	ctx.drawImage(emptyCard, 0, 0, size.width, size.height);
-
-	ctx.fillStyle = color;
-	ctx.fillRect(10, 10, size.width - 20, size.height - 20);
-
-	const img = new Image();
-	canvas.convertToBlob().then(blob => {
-		const url = URL.createObjectURL(blob);
-		img.src = url;
-	});
-
-	return img;
-}
-
