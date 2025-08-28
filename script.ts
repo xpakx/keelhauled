@@ -19,7 +19,7 @@ window.onload = async () => {
 	const faceImage = await loadImage("images/empty.png");
 	cardLib.setDefaultReverse(cardImage);
 	cardLib.registerDefinition("empty", faceImage);
-	const colors = ["red", "blue", "green", "yellow", "magenta", "cyan", "black"];
+	const colors = ["red", "blue", "green", "yellow", "magenta", "cyan", "black", "gray"];
 	for (let color of colors) {
 		const image = createCardImage(
 			faceImage,

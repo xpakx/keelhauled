@@ -34,8 +34,8 @@ export class DebugRules implements Rules {
 
 
 export class PairsMemoryGameRules implements Rules {
-	private firstSelection: {card: Card, coord: Position} | null = null;
-	private secondSelection: {card: Card, coord: Position} | null = null;
+	private firstSelection: Card | null = null;
+	private secondSelection: Card | null = null;
 	private locked: boolean = false;
 	private score: number = 0;
 	private cardsInGame: string[] = [];
@@ -45,7 +45,7 @@ export class PairsMemoryGameRules implements Rules {
 		const totalCards = this.size.width * this.size.height;
 		const pairsNeeded = totalCards / 2;
 
-		const keys = game.cardLib.getKeys();
+		const keys = game.cardLib.getKeys().filter(c => c != "empty");
 		const shuffledKeys = [...keys].sort(() => Math.random() - 0.5);
 		const chosen = shuffledKeys.slice(0, pairsNeeded);
 		this.cardsInGame = [...chosen, ...chosen];
@@ -54,16 +54,16 @@ export class PairsMemoryGameRules implements Rules {
 		game.setGridSize({width: this.size.width, height: this.size.height});
 	}
 
-	onCardClick(game: Game, card: Card, coord?: Position): void {
+	onCardClick(game: Game, card: Card, _coord?: Position): void {
 		if (this.locked || card.flipped) return;
 
 		card.revealCard();
 		console.log(`${card.name} revealed`);
 
 		if (!this.firstSelection) {
-			this.firstSelection = {card, coord: coord ?? {x:-1,y:-1}};
+			this.firstSelection = card;
 		} else if (!this.secondSelection) {
-			this.secondSelection = {card, coord: coord ?? {x:-1,y:-1}};
+			this.secondSelection = card;
 			this.checkMatch(game);
 		}
 	}
@@ -72,10 +72,8 @@ export class PairsMemoryGameRules implements Rules {
 		if (!this.firstSelection || !this.secondSelection) return;
 		this.locked = true;
 
-		const first = this.firstSelection.card;
-		const second = this.secondSelection.card;
-		if (!first) return;
-		if (!second) return;
+		const first = this.firstSelection;
+		const second = this.secondSelection;
 
 		const match = first.name === second.name;
 		if (match) {
