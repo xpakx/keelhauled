@@ -39,7 +39,8 @@ export class CardLibrary implements CardProducer {
 		return new Card(
 			def.back,
 			def.face,
-			{width: this.defaultCardSize.width, height: this.defaultCardSize.height}
+			{width: this.defaultCardSize.width, height: this.defaultCardSize.height},
+			name,
 		);
 	}
 

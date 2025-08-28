@@ -7,6 +7,7 @@ export class Card {
 	size: Size;
 	drawDelta: Position;
 	dealt: boolean = false;
+	name: string;
 
 	hovered: boolean = false;
 	flipped: boolean = false;
@@ -20,9 +21,11 @@ export class Card {
 		back: HTMLImageElement | undefined,
 		face: HTMLImageElement | undefined,
 		size: Size,
+		name: string,
 	) {
 		this.back = back;
 		this.face = face;
+		this.name = name;
 		this.size = size;
 		this.drawDelta = {x: 0, y: 0};
 	}
