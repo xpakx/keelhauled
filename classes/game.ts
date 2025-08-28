@@ -1,6 +1,7 @@
 import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
 import { Hand } from "./hand.js";
+import { Rules } from "./rules.js";
 
 export interface Size {
 	width: number;
@@ -35,6 +36,7 @@ export class Game {
 	grid: Card[][] = [];
 	cards: CardContainer[] = [];
 	hand: Hand;
+	rules: Rules;
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
@@ -44,6 +46,7 @@ export class Game {
 		context: CanvasRenderingContext2D, 
 		canvas: HTMLCanvasElement,
 		cardLib: CardLibrary,
+		rules: Rules,
 	) {
 		this.context = context;
 		this.canvas = canvas;
@@ -51,6 +54,8 @@ export class Game {
 		this.setCanvasSize(this.defaultCanvasSize);
 		this.hand = new Hand();
 		this.hand.calculatePosition(this.defaultCanvasSize);
+		this.rules = rules;
+		this.rules.init(this);
 	}
 
 	nextFrame(timestamp: number) {
@@ -64,6 +69,10 @@ export class Game {
 				y: this.mouseCoord.y - this.hand.selectedCard.size.height/2
 			};
 			this.hand.selectedCard?.draw(this.context, pos);
+		}
+
+		if (this.rules.isGameOver(this)) {
+			console.log("Game Over!", this.rules.getState?.());
 		}
 	}
 
@@ -79,7 +88,7 @@ export class Game {
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				const card = this.cardLib.getCard("empty");
+				const card = this.cardLib.getCard(this.rules.drawCard() || "empty");
 				if (!card) continue;
 				this.grid[i][j] = card;
 
@@ -157,7 +166,8 @@ export class Game {
 		this.mouseCoord.y = event.clientY - rect.top;
 		const coord = this.mouseToGridCoord(this.mouseCoord);
 		if (coord) {
-			this.grid[coord.x][coord.y].revealCard();
+			const card = this.grid[coord.x][coord.y];
+			this.rules.onCardClick(this, card, coord);
 		} else {
 			this.hand.onMouseLeftClick(this.mouseCoord);
 		}
