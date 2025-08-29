@@ -231,20 +231,18 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		const size: Size = {width: 80, height: 100};
 		cardLib.setDefaultSize(size);
 
-		const suits = ["H", "D", "C", "S"];
-		const ranks = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+		const suits = ["C", "H", "S", "D"];
+		const ranks = ["K", "Q", "J", "A", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+		const sprites = await this.loadImage("images/trad/sprites.png");
+		const images = await this.splitGridImage(sprites, 3, 8);
+		console.log(images);
 
+		let index = 0;
 		const suitImages: Record<string, HTMLImageElement> = {};
-		for (let suit of suits) {
-			const suitImage = await this.loadImage(`images/trad/${suit}.png`);
-			suitImages[suit] = suitImage;
-		}
+		for (let suit of suits) suitImages[suit] = images[index++];
 
 		const rankImages: Record<string, HTMLImageElement> = {};
-		for (let rank of ranks) {
-			const rankImage = await this.loadImage(`images/trad/${rank}.png`);
-			rankImages[rank] = rankImage;
-		}
+		for (let rank of ranks) rankImages[rank] = images[index++];
 
 		for (let suit of suits) {
 			for (let rank of ranks) {
@@ -259,7 +257,6 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 			}
 		}
 	}
-
 
 	createCardImage(
 		background: HTMLImageElement,
@@ -281,16 +278,16 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		ctx.drawImage(frame, 0, 0, size.width, size.height);
 
 		const rankSize = size.width * 0.2;
-		ctx.drawImage(rank, 5, 6, rankSize, rankSize);
+		ctx.drawImage(rank, 8, 7, rankSize, rankSize);
 
 		const suitSize = size.width * 0.18;
-		ctx.drawImage(suit, 5, rankSize + 5, suitSize, suitSize);
+		ctx.drawImage(suit, 8, rankSize + 7, suitSize, suitSize);
 
 		ctx.save();
 		ctx.translate(size.width, size.height);
 		ctx.rotate(Math.PI);
-		ctx.drawImage(rank, 5, 6, rankSize, rankSize);
-		ctx.drawImage(suit, 5, rankSize + 5, suitSize, suitSize);
+		ctx.drawImage(rank, 8, 7, rankSize, rankSize);
+		ctx.drawImage(suit, 8, rankSize + 7, suitSize, suitSize);
 		ctx.restore();
 
 
