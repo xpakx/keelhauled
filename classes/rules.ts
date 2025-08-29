@@ -181,3 +181,87 @@ export class PairGameCardLoader extends DefaultCardLoader implements CardLoader 
 	}
 
 }
+
+
+export class TraditionalDeckCardLoader extends DefaultCardLoader implements CardLoader {
+
+	async load(cardLib: CardLibrary): Promise<undefined> {
+		const cardImage = await this.loadImage("images/trad/card.png");
+		const background = await this.loadImage("images/trad/card.png");
+		const frame = await this.loadImage("images/trad/frame.png");
+		cardLib.setDefaultReverse(cardImage);
+		const size: Size = {width: 80, height: 100};
+		cardLib.setDefaultSize(size);
+
+		const suits = ["H", "D", "C", "S"];
+		const ranks = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+
+		const suitImages: Record<string, HTMLImageElement> = {}
+		for (let suit of suits) {
+			const suitImage = await this.loadImage(`images/trad/${suit}.png`);
+			suitImages[suit] = suitImage;
+		}
+
+		const rankImages: Record<string, HTMLImageElement> = {}
+		for (let rank of ranks) {
+			const rankImage = await this.loadImage(`images/trad/${rank}.png`);
+			rankImages[rank] = rankImage;
+		}
+
+		for (let suit of suits) {
+			for (let rank of ranks) {
+				const image = this.createCardImage(
+					background,
+					frame,
+					suitImages[suit],
+					rankImages[rank],
+					size,
+				);
+				cardLib.registerDefinition(`${rank}${suit}`, image);
+			}
+		}
+	}
+
+
+	createCardImage(
+		background: HTMLImageElement,
+		frame: HTMLImageElement,
+		suit: HTMLImageElement,
+		rank: HTMLImageElement,
+		size: Size,
+	): HTMLImageElement {
+		const canvas = new OffscreenCanvas(size.width, size.height);
+		canvas.width = size.width;
+		canvas.height = size.height;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) throw new Error("No 2D context!");
+
+		ctx.drawImage(background, 0, 0, size.width, size.height);
+
+		// TODO: main image
+
+		ctx.drawImage(frame, 0, 0, size.width, size.height);
+
+		const rankSize = size.width * 0.2;
+		ctx.drawImage(rank, 5, 6, rankSize, rankSize);
+
+		const suitSize = size.width * 0.18;
+		ctx.drawImage(suit, 5, rankSize + 5, suitSize, suitSize);
+
+		ctx.save();
+		ctx.translate(size.width, size.height);
+		ctx.rotate(Math.PI);
+		ctx.drawImage(rank, 5, 6, rankSize, rankSize);
+		ctx.drawImage(suit, 5, rankSize + 5, suitSize, suitSize);
+		ctx.restore();
+
+
+		const img = new Image();
+		canvas.convertToBlob().then(blob => {
+			const url = URL.createObjectURL(blob);
+			img.src = url;
+		});
+
+		return img;
+	}
+}
