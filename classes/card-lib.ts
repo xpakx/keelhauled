@@ -24,6 +24,10 @@ export class CardLibrary implements CardProducer {
 		this.defaultReverse = image;
 	}
 
+	setDefaultSize(size: Size) {
+		this.defaultCardSize = size;
+	}
+
 	registerDefinition(name: string, face?: HTMLImageElement, back?: HTMLImageElement) {
 		const def = {
 			face: face,
