@@ -147,8 +147,8 @@ export class PairGameCardLoader extends DefaultCardLoader implements CardLoader 
 		for (let color of colors) {
 			const image = this.createCardImage(
 				faceImage,
+				{width: 100, height: 100},
 				color,
-				{width: 100, height: 100}
 			);
 			cardLib.registerDefinition(color, image);
 		}
@@ -157,8 +157,8 @@ export class PairGameCardLoader extends DefaultCardLoader implements CardLoader 
 
 	createCardImage(
 		emptyCard: HTMLImageElement,
+		size: Size,
 		color: string = "#000000",
-			size: Size,
 	): HTMLImageElement {
 		const canvas = new OffscreenCanvas(size.width, size.height);
 		canvas.width = size.width;
@@ -196,13 +196,13 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		const suits = ["H", "D", "C", "S"];
 		const ranks = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 
-		const suitImages: Record<string, HTMLImageElement> = {}
+		const suitImages: Record<string, HTMLImageElement> = {};
 		for (let suit of suits) {
 			const suitImage = await this.loadImage(`images/trad/${suit}.png`);
 			suitImages[suit] = suitImage;
 		}
 
-		const rankImages: Record<string, HTMLImageElement> = {}
+		const rankImages: Record<string, HTMLImageElement> = {};
 		for (let rank of ranks) {
 			const rankImage = await this.loadImage(`images/trad/${rank}.png`);
 			rankImages[rank] = rankImage;
