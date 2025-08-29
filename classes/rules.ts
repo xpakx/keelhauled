@@ -147,7 +147,6 @@ export class PairGameCardLoader extends DefaultCardLoader implements CardLoader 
 		for (let color of colors) {
 			const image = this.createCardImage(
 				faceImage,
-				{width: 100, height: 100},
 				color,
 			);
 			cardLib.registerDefinition(color, image);
@@ -157,19 +156,28 @@ export class PairGameCardLoader extends DefaultCardLoader implements CardLoader 
 
 	createCardImage(
 		emptyCard: HTMLImageElement,
-		size: Size,
 		color: string = "#000000",
 	): HTMLImageElement {
-		const canvas = new OffscreenCanvas(size.width, size.height);
-		canvas.width = size.width;
-		canvas.height = size.height;
+		const canvas = new OffscreenCanvas(emptyCard.width, emptyCard.height);
+		canvas.width = emptyCard.width;
+		canvas.height = emptyCard.height;
 		const ctx = canvas.getContext("2d");
 		if (!ctx) throw new Error("No 2D context!");
 
-		ctx.drawImage(emptyCard, 0, 0, size.width, size.height);
+		ctx.drawImage(emptyCard, 0, 0, canvas.width, canvas.height);
 
 		ctx.fillStyle = color;
-		ctx.fillRect(10, 10, size.width - 20, size.height - 20);
+		const padding = 0.105 * canvas.width;
+		const radius = 0.12 * canvas.width;
+		ctx.beginPath();
+		ctx.roundRect(
+			padding, 
+			padding,
+			canvas.width - 2*padding,
+			canvas.height - 2*padding,
+			radius
+		);
+		ctx.fill();
 
 		const img = new Image();
 		canvas.convertToBlob().then(blob => {
