@@ -109,7 +109,7 @@ export class PairsMemoryGameRules implements Rules {
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
-		if (this.locked || card.flipped || !card.dealt) return;
+		if (this.locked || !card.safeToFlip()) return;
 
 		card.revealCard();
 		console.log(`${card.name} revealed`);
@@ -129,6 +129,7 @@ export class PairsMemoryGameRules implements Rules {
 
 		const first = this.firstSelection;
 		const second = this.secondSelection;
+		console.log(`comparing ${first.name} and ${second.name}`);
 
 		const match = first.name === second.name;
 		if (match) {

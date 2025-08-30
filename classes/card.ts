@@ -35,6 +35,10 @@ export class Card {
 		this.animation = undefined;
 	}
 
+	isAnimationActive(name: string): boolean {
+		return this.animation != undefined && this.animation.name === name;
+	}
+
 	tick(timestamp: number, hovered: boolean) {
 		this.hovered = hovered;
 
@@ -81,6 +85,11 @@ export class Card {
 		if (!this.dealt) return;
 		this.animation = this.flippingAnimation;
 		if (this.animation.init) this.animation.init();
+	}
+
+	safeToFlip(): boolean {
+		if (this.isAnimationActive("flipping")) return false;
+		return !this.flipped && this.dealt;
 	}
 
 	deal(delta: Position, animationDelta: number = 0) {
