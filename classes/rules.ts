@@ -91,7 +91,8 @@ export class PairsMemoryGameRules implements Rules {
 	private firstSelection: Card | null = null;
 	private secondSelection: Card | null = null;
 	private locked: boolean = false;
-	private score: number = 0;
+	private moves: number = 0;
+	private pairsFound: number = 0;
 	private cardsInGame: string[] = [];
 	private size: Size = {width: 4, height: 4};
 
@@ -112,6 +113,7 @@ export class PairsMemoryGameRules implements Rules {
 		if (this.locked || !card.safeToFlip()) return;
 
 		card.revealCard();
+		this.moves++;
 		console.log(`${card.name} revealed`);
 
 		if (!this.firstSelection) {
@@ -133,7 +135,7 @@ export class PairsMemoryGameRules implements Rules {
 
 		const match = first.name === second.name;
 		if (match) {
-			this.score++;
+			this.pairsFound++;
 			this.firstSelection = null;
 			this.secondSelection = null;
 			this.locked = false;
@@ -154,17 +156,16 @@ export class PairsMemoryGameRules implements Rules {
 	}
 
 	getScore(): number {
-		return this.score;
+		return this.moves;
 	}
 
 	getState(): string {
-		return `Score: ${this.score}, Pairs found: ${this.score}`;
+		return `Moves: ${this.moves}, Pairs found: ${this.pairsFound}`;
 	}
 
 	drawCard(): string | undefined {
 		return this.cardsInGame.pop();
 	}
-
 }
 
 
