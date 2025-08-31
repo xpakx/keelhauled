@@ -1,6 +1,6 @@
 import { CardProducer } from "./card-lib.js";
 import { Card } from "./card.js";
-import { Position, Size } from "./game.js";
+import { CardContainer, Position, Size } from "./game.js";
 import { Rules } from "./rules.js";
 
 interface CardGridData {
@@ -9,7 +9,7 @@ interface CardGridData {
 	zIndex: number;
 }
 
-export class Grid {
+export class Grid implements CardContainer {
 	cellSize = 100;
 
 	coord: Position = {x: -1, y: -1};
@@ -116,5 +116,9 @@ export class Grid {
 		this.cards.sort((a, b) => {
 			return a.zIndex - b.zIndex;
 		});
+	}
+
+	getCards(): Card[] {
+		return this.cards.map(c => c.card);
 	}
 }

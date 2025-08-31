@@ -1,4 +1,5 @@
 import { CardLibrary } from "./card-lib.js";
+import { Card } from "./card.js";
 import { Grid } from "./grid.js";
 import { Hand } from "./hand.js";
 import { Rules } from "./rules.js";
@@ -11,6 +12,14 @@ export interface Size {
 export interface Position {
 	x: number;
 	y: number;
+}
+
+export interface CardContainer {
+	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D): void;
+	onMouseMove(position: Position): void;
+	onMouseLeftClick(position: Position): Card | undefined;
+	onMouseLeftClickRelease(position: Position): void;
+	getCards(): Card[];
 }
 
 export class Game {
@@ -26,7 +35,7 @@ export class Game {
 	hand: Hand;
 	rules: Rules;
 
-	grid: Grid = new Grid();
+	grid: CardContainer = new Grid();
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -68,7 +77,8 @@ export class Game {
 	}
 
 	setGridSize(size: Size) {
-		this.grid.setGridSize(
+		const grid = this.grid as Grid; // TODO
+		grid.setGridSize(
 			size,
 			{width: this.canvas.width, height: this.canvas.height},
 			this.cardLib,
