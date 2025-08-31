@@ -152,7 +152,7 @@ export class PairsMemoryGameRules implements Rules {
 	}
 
 	isGameOver(game: Game): boolean {
-		return !this.locked && game.cards.every(c => c.card.flipped);
+		return !this.locked && game.grid.cards.every(c => c.card.flipped);
 	}
 
 	getScore(): number {

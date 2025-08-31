@@ -1,7 +1,13 @@
 import { CardProducer } from "./card-lib.js";
 import { Card } from "./card.js";
-import { CardContainer, Position, Size } from "./game.js";
+import { Position, Size } from "./game.js";
 import { Rules } from "./rules.js";
+
+interface CardGridData {
+	card: Card;
+	coord: Position;
+	zIndex: number;
+}
 
 export class Grid {
 	cellSize = 100;
@@ -11,7 +17,7 @@ export class Grid {
 	gridSize: Size = {width: 0, height: 0};
 
 	grid: Card[][] = [];
-	cards: CardContainer[] = [];
+	cards: CardGridData[] = [];
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
