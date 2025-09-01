@@ -13,6 +13,7 @@ export class Circle implements CardContainer {
 	cards: CardGridData[] = [];
 	hoveredIndex: number = -1;
 	angleOffset: number = -Math.PI / 2; 
+	drawOrder: number[] = [];
 
 	constructor(center: Position, canvasSize: Size, radius: number) {
 		this.center = {
@@ -41,10 +42,12 @@ export class Circle implements CardContainer {
 
 			card.coord.x = this.center.x + this.radius * Math.cos(angle) - card.card.size.width / 2;
 			card.coord.y = this.center.y + this.radius * Math.sin(angle) - card.card.size.height / 2;
+			card.zIndex = n - i;
 			const dx = this.center.x - card.coord.x - card.card.size.width / 2;
 			const dy = this.center.y - card.coord.y - card.card.size.height / 2;
 			this.cards[i].card.deal({ x: dx, y: dy }, i*150);
 		}
+		this.sortCards();
 	}
 
 	private mouseToIndex(mousePos: Position): number | undefined {
@@ -72,11 +75,12 @@ export class Circle implements CardContainer {
 	}
 
 	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D) {
-		this.cards.forEach((card, i) => {
+		for (let i of this.drawOrder) {
+			const card = this.cards[i];
 			const underCursor = i === this.hoveredIndex;
 			card.card.tick(timestamp, underCursor);
 			card.card.draw(ctx, { x: card.coord.x, y: card.coord.y });
-		});
+		};
 	}
 
 	onMouseMove(position: Position) {
@@ -91,9 +95,8 @@ export class Circle implements CardContainer {
 	onMouseLeftClickRelease(_position: Position) { }
 
 	sortCards() {
-		this.cards.sort((a, b) => {
-			return a.zIndex - b.zIndex;
-		});
+		this.drawOrder = this.cards.map((_, i) => i);
+		this.drawOrder.sort((a, b) => this.cards[a].zIndex - this.cards[b].zIndex);
 	}
 
 	getCards(): Card[] {
