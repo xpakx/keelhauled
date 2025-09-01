@@ -41,8 +41,8 @@ export class Circle implements CardContainer {
 
 			card.coord.x = this.center.x + this.radius * Math.cos(angle) - card.card.size.width / 2;
 			card.coord.y = this.center.y + this.radius * Math.sin(angle) - card.card.size.height / 2;
-			const dx = this.center.x - card.coord.x;
-			const dy = this.center.y - card.coord.y;
+			const dx = this.center.x - card.coord.x - card.card.size.width / 2;
+			const dy = this.center.y - card.coord.y - card.card.size.height / 2;
 			this.cards[i].card.deal({ x: dx, y: dy }, i*150);
 		}
 	}
