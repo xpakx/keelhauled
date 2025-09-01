@@ -48,7 +48,18 @@ export class Circle implements CardContainer {
 	}
 
 	private mouseToIndex(mousePos: Position): number | undefined {
-		return 0;
+		if (!this.cards.length) return;
+
+		for (let i = 0; i < this.cards.length; i++) {
+			const card = this.cards[i];
+			const x0 = card.coord.x;
+			const y0 = card.coord.y;
+			const x1 = card.coord.x + card.card.size.width;
+			const y1 = card.coord.y + card.card.size.height;
+			if (mousePos.x < x0 || mousePos.x > x1) continue;
+			if (mousePos.y < y0 || mousePos.y > y1) continue;
+			return i;
+		}
 	}
 
 
