@@ -50,18 +50,26 @@ export class Circle implements CardContainer {
 	private mouseToIndex(mousePos: Position): number | undefined {
 		if (!this.cards.length) return;
 
-		for (let i = 0; i < this.cards.length; i++) {
-			const card = this.cards[i];
-			const x0 = card.coord.x;
-			const y0 = card.coord.y;
-			const x1 = card.coord.x + card.card.size.width;
-			const y1 = card.coord.y + card.card.size.height;
-			if (mousePos.x < x0 || mousePos.x > x1) continue;
-			if (mousePos.y < y0 || mousePos.y > y1) continue;
-			return i;
-		}
-	}
+		const dx = mousePos.x - this.center.x;
+		const dy = mousePos.y - this.center.y;
 
+		let angle = Math.atan2(dy, dx);
+		angle -= this.angleOffset;
+		if (angle < 0) angle += 2 * Math.PI;
+
+		const step = (2 * Math.PI) / this.cards.length;
+		const rawIndex = Math.round(angle / step) % this.cards.length;
+
+		const card = this.cards[rawIndex];
+
+		const x0 = card.coord.x;
+		const y0 = card.coord.y;
+		const x1 = card.coord.x + card.card.size.width;
+		const y1 = card.coord.y + card.card.size.height;
+		if (mousePos.x < x0 || mousePos.x > x1) return;
+		if (mousePos.y < y0 || mousePos.y > y1) return;
+		return rawIndex;
+	}
 
 	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D) {
 		this.cards.forEach((card, i) => {
