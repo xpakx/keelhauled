@@ -1,6 +1,6 @@
 import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
-import { PairGameCardLoader, PairsMemoryGameRules, TraditionalDeckCardLoader } from "./classes/rules.js";
+import { DebugRules, PairGameCardLoader, PairsMemoryGameRules, TraditionalDeckCardLoader } from "./classes/rules.js";
 
 window.onload = async () => {
 	const canvas = document.getElementById('gameCanvas') as (HTMLCanvasElement | null);
@@ -18,7 +18,7 @@ window.onload = async () => {
 	let cardLoader = new TraditionalDeckCardLoader();
 	await cardLoader.load(cardLib);
 
-	let game = new Game(context, canvas, cardLib, new PairsMemoryGameRules());
+	let game = new Game(context, canvas, cardLib, new DebugRules());
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);

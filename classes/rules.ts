@@ -1,5 +1,6 @@
 import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
+import { Circle } from "./circle.js";
 import { Game, Position, Size } from "./game.js";
 
 export interface Rules {
@@ -17,8 +18,17 @@ export interface CardLoader {
 
 export class DebugRules implements Rules {
 	init(game: Game): void {
-		game.setGridSize({width: 5, height: 5});
-		game.__debugAddHand();
+		// game.setGridSize({width: 5, height: 5});
+		const board = new Circle({x: 0, y: 0}, {width: game.canvas.width, height: game.canvas.height}, 300);
+		game.grid = board;
+		const cards: Card[] = [];
+		for (let i = 0; i < 10; i++) {
+			cards.push(
+				game.cardLib.getCard("KC")!
+			);
+		}
+		board.setCards(cards);
+		// game.__debugAddHand();
 	}
 
 	onCardClick(_game: Game, card: Card, _coord?: Position): void {
