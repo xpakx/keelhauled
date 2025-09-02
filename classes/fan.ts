@@ -49,19 +49,45 @@ export class Fan implements CardContainer {
 	}
 
 	onMouseMove(position: Position): void {
-		throw new Error("Method not implemented.");
+		this.hoveredIndex = this.mouseToIndex(position) ?? -1;
 	}
 
-	onMouseLeftClick(position: Position): Card | undefined {
-		throw new Error("Method not implemented.");
+	onMouseLeftClick(position: { x: number; y: number }): Card | undefined {
+		const idx = this.mouseToIndex(position);
+		if (idx !== undefined) return this.cards[idx].card;
+		return undefined;
 	}
 
-	onMouseLeftClickRelease(position: Position): void {
-		throw new Error("Method not implemented.");
+	private mouseToIndex(pos: Position): number | undefined {
+		if (!this.cards.length) return;
+
+		// TODO
+		for (let i = this.cards.length - 1; i >= 0; i--) {
+			const c = this.cards[i];
+
+			const cx = c.coord.x + c.card.size.width / 2;
+			const cy = c.coord.y + c.card.size.height / 2;
+
+			const dx = pos.x - cx;
+			const dy = pos.y - cy;
+
+			const angle = -c.angle;
+			const localX = dx * Math.cos(angle) - dy * Math.sin(angle);
+			const localY = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+			const w = c.card.size.width / 2;
+			const h = c.card.size.height / 2;
+			if (localX >= -w && localX <= w && localY >= -h && localY <= h) {
+				return i;
+			}
+		}
+	}
+
+	onMouseLeftClickRelease(_position: Position): void {
 	}
 
 	getCards(): Card[] {
-		throw new Error("Method not implemented.");
+		return this.cards.map(c => c.card);
 	}
 
 	static defaultArc(t: number) {
