@@ -19,7 +19,7 @@ export class Circle implements CardContainer {
 		this.center = {
 			x: canvasSize.width / 2 + center.x,
 			y: canvasSize.height / 2 + center.y,
-		};;
+		};
 		this.radius = radius;
 	}
 

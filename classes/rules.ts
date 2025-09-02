@@ -20,7 +20,7 @@ export interface CardLoader {
 export class DebugRules implements Rules {
 	init(game: Game): void {
 		// game.setGridSize({width: 5, height: 5});
-		const board = new Fan();
+		const board = new Fan({width: game.canvas.width, height: game.canvas.height});
 		game.grid = board;
 		const cards: Card[] = [];
 		for (let i = 0; i < 10; i++) {

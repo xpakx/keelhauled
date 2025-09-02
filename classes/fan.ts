@@ -1,7 +1,7 @@
 import { Card } from "./card";
-import { CardContainer, Position } from "./game";
+import { CardContainer, Position, Size } from "./game";
 
-export type CurveFn = (t: number) => { x: number; y: number; angle?: number };
+export type CurveFn = (t: number, radius: number, center: Position) => { x: number; y: number; angle?: number };
 
 interface CardGridData {
 	card: Card;
@@ -14,16 +14,25 @@ export class Fan implements CardContainer {
 	curveFn: CurveFn;
 	cards: CardGridData[] = [];
 	hoveredIndex: number = -1;
+	center: Position;
+	radius: number;
 
-	constructor(curveFn: CurveFn = Fan.defaultArc) {
+	constructor(canvasSize: Size, center: Position = {x: 0, y: 0}, radius: number = 200, curveFn: CurveFn = Fan.defaultArc) {
+		this.center = {
+			x: canvasSize.width / 2 + center.x,
+			y: canvasSize.height / 2 + center.y,
+		};;
 		this.curveFn = curveFn;
+		this.radius = radius;
 	}
 
 	setCards(cards: Card[]) {
 		const step = 1 / (cards.length - 1);
 		cards.forEach((card, i) => {
 			const t = i * step;
-			const { x, y, angle } = this.curveFn(t);
+			const { x, y, angle } = this.curveFn(t, this.radius, this.center);
+			card.dealt = true; // DEBUG
+			card.flipped = true; // DEBUG
 			this.cards.push({
 				card: card,
 				zIndex: step,
@@ -90,13 +99,11 @@ export class Fan implements CardContainer {
 		return this.cards.map(c => c.card);
 	}
 
-	static defaultArc(t: number) {
-		const radius = 200;
-
+	static defaultArc(t: number, radius: number, center: Position) {
 		const theta = -Math.PI / 4 + t * (Math.PI / 2);
 		return {
-			x: 200 + radius * Math.sin(theta),
-			y: 500 + -radius * Math.cos(theta),
+			x: center.x + radius * Math.sin(theta),
+			y: center.y + -radius * Math.cos(theta),
 			angle: theta,
 		};
 	}
