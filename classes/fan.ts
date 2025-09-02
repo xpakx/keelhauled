@@ -17,6 +17,8 @@ export class Fan implements CardContainer {
 	center: Position;
 	radius: number;
 
+	maxCards: number = 10;
+
 	constructor(canvasSize: Size, center: Position = {x: 0, y: 0}, radius: number = 200, curveFn: CurveFn = Fan.defaultArc) {
 		this.center = {
 			x: canvasSize.width / 2 + center.x,
@@ -27,15 +29,16 @@ export class Fan implements CardContainer {
 	}
 
 	setCards(cards: Card[]) {
-		const step = 1 / (cards.length - 1);
+		const step = 1 / (this.maxCards - 1);
+		const start = Math.max(0, (this.maxCards - cards.length)/2)*step;
 		cards.forEach((card, i) => {
-			const t = i * step;
+			const t = start + i * step;
 			const { x, y, angle } = this.curveFn(t, this.radius, this.center);
 			card.dealt = true; // DEBUG
 			card.flipped = true; // DEBUG
 			this.cards.push({
 				card: card,
-				zIndex: step,
+				zIndex: i,
 				coord: {x, y},
 				angle: angle ? angle : 0,
 			});
