@@ -1,6 +1,7 @@
 import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
 import { Circle } from "./circle.js";
+import { Fan } from "./fan.js";
 import { Game, Position, Size } from "./game.js";
 
 export interface Rules {
@@ -19,7 +20,7 @@ export interface CardLoader {
 export class DebugRules implements Rules {
 	init(game: Game): void {
 		// game.setGridSize({width: 5, height: 5});
-		const board = new Circle({x: 0, y: 0}, {width: game.canvas.width, height: game.canvas.height}, 300);
+		const board = new Fan();
 		game.grid = board;
 		const cards: Card[] = [];
 		for (let i = 0; i < 10; i++) {
