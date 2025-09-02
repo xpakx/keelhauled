@@ -48,13 +48,16 @@ export class Fan implements CardContainer {
 			card.card.tick(timestamp, underCursor);
 
 			ctx.save();
-			const cx = card.coord.x + card.card.size.width / 2;
-			const cy = card.coord.y + card.card.size.height / 2;
+			const cx = card.coord.x;
+			const cy = card.coord.y;
 			ctx.translate(cx, cy);
 			ctx.rotate(card.angle);
 			card.card.draw(ctx, { x: -card.card.size.width / 2, y: -card.card.size.height / 2 });
 			ctx.restore();
+
+			
 		});
+
 	}
 
 	onMouseMove(position: Position): void {
@@ -74,8 +77,8 @@ export class Fan implements CardContainer {
 		for (let i = this.cards.length - 1; i >= 0; i--) {
 			const c = this.cards[i];
 
-			const cx = c.coord.x + c.card.size.width / 2;
-			const cy = c.coord.y + c.card.size.height / 2;
+			const cx = c.coord.x;
+			const cy = c.coord.y;
 
 			const dx = pos.x - cx;
 			const dy = pos.y - cy;
@@ -103,7 +106,7 @@ export class Fan implements CardContainer {
 		const theta = -Math.PI / 4 + t * (Math.PI / 2);
 		return {
 			x: center.x + radius * Math.sin(theta),
-			y: center.y + -radius * Math.cos(theta),
+			y: center.y + -radius * Math.cos(theta) + radius/2,
 			angle: theta,
 		};
 	}
