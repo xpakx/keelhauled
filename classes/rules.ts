@@ -1,4 +1,4 @@
-import { CardLibrary } from "./card-lib.js";
+import { CardLibrary, Deck } from "./card-lib.js";
 import { Card } from "./card.js";
 import { Fan } from "./fan.js";
 import { Game, Position, Size } from "./game.js";
@@ -121,11 +121,10 @@ export class PairsMemoryGameRules implements Rules {
 		const totalCards = this.size.width * this.size.height;
 		const pairsNeeded = totalCards / 2;
 
-		const keys = game.cardLib.getKeys().filter(c => c != "empty");
-		const shuffledKeys = [...keys].sort(() => Math.random() - 0.5);
-		const chosen = shuffledKeys.slice(0, pairsNeeded);
-		this.cardsInGame = [...chosen, ...chosen];
-		this.cardsInGame.sort(() => Math.random() - 0.5);
+		const deck = game.cardLib.toDeck();
+		deck.shuffle();
+		const cardsInGame = deck.subdeck(pairsNeeded, {shuffled: true, doubled: true});
+		this.cardsInGame = cardsInGame.cards;
 
 		const grid = new Grid();
 		game.registerContainer("grid", grid);
