@@ -9,6 +9,7 @@ export interface CardDefintion {
 export interface CardProducer {
 	getCard(name: string): Card | undefined;
 	getRandomCard(): Card | undefined;
+	getKeys(): string[];
 }
 
 export class CardLibrary implements CardProducer {
@@ -72,10 +73,10 @@ export class CardLibrary implements CardProducer {
 }
 
 export class Deck implements CardProducer {
-	cardLib: CardLibrary;
+	cardLib: CardProducer;
 	cards: string[];
 
-	constructor(library: CardLibrary, cards?: string[]) {
+	constructor(library: CardProducer, cards?: string[]) {
 		this.cardLib = library;
 		this.cards = cards ?? library.getKeys();
 	}
@@ -89,7 +90,9 @@ export class Deck implements CardProducer {
 	}
 
 	getRandomCard(): Card | undefined {
-		throw new Error("Method not implemented.");
+		if (!this.cards.length) return undefined;
+		const idx = Math.floor(Math.random() * this.cards.length);
+		return this.cardLib.getCard(this.cards[idx]);
 	}
 
 	draw(): Card | undefined {
@@ -109,6 +112,10 @@ export class Deck implements CardProducer {
 		if (options.doubled) subdeck.double();
 		if (options.shuffled) subdeck.shuffle();
 		return subdeck
+	}
+
+	getKeys(): string[] {
+	    return Array.from(this.cards);
 	}
 }
 
