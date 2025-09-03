@@ -65,4 +65,54 @@ export class CardLibrary implements CardProducer {
 	getKeys(): string[] {
 		return Array.from(this.cardDefinitions.keys());
 	}
+
+	toDeck(): Deck {
+		return new Deck(this);
+	}
+}
+
+export class Deck implements CardProducer {
+	cardLib: CardLibrary;
+	cards: string[];
+
+	constructor(library: CardLibrary, cards?: string[]) {
+		this.cardLib = library;
+		this.cards = cards ?? library.getKeys();
+	}
+
+	shuffle() {
+		this.cards.sort(() => Math.random() - 0.5);
+	}
+
+	getCard(name: string): Card | undefined {
+		return this.cardLib.getCard(name);
+	}
+
+	getRandomCard(): Card | undefined {
+		throw new Error("Method not implemented.");
+	}
+
+	draw(): Card | undefined {
+		const name = this.cards.pop();
+		if (!name) return;
+		return this.cardLib.getCard(name);
+	}
+
+	double() {
+		this.cards = [...this.cards, ...this.cards];
+	}
+
+	subdeck(amount: number, options?: SubdeckOptions) {
+		const chosen = this.cards.slice(0, amount);
+		const subdeck = new Deck(this.cardLib, chosen);
+		if (!options) return subdeck;
+		if (options.doubled) subdeck.double();
+		if (options.shuffled) subdeck.shuffle();
+		return subdeck
+	}
+}
+
+export interface SubdeckOptions {
+	shuffled?: boolean,
+	doubled?: boolean,
 }
