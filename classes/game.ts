@@ -35,7 +35,7 @@ export class Game {
 	hand: Hand;
 	rules: Rules;
 
-	grid: CardContainer = new Grid();
+	containers: Map<string, CardContainer> = new Map();
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -55,7 +55,12 @@ export class Game {
 
 	nextFrame(timestamp: number) {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.grid.nextFrame(timestamp, this.context);
+
+		for (let containerName of this.containers.keys()) {
+			const container = this.containers.get(containerName);
+			container?.nextFrame(timestamp, this.context);
+		}
+
 		this.hand.tick(timestamp, this.mouseCoord);
 		this.hand.draw(this.context);
 		if (this.hand.dragging && this.hand.selectedCard) {
@@ -76,44 +81,54 @@ export class Game {
 		this.canvas.height = size.height;
 	}
 
-	setGridSize(size: Size) {
-		const grid = this.grid as Grid; // TODO
-		grid.setGridSize(
-			size,
-			{width: this.canvas.width, height: this.canvas.height},
-			this.cardLib,
-			this.rules,
-		);
-	}
-
 	onMouseMove(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
 		this.mouseCoord.x = event.clientX - rect.left;
 		this.mouseCoord.y = event.clientY - rect.top;
-		this.grid.onMouseMove(this.mouseCoord);
+
+		for (let containerName of this.containers.keys()) {
+			const container = this.containers.get(containerName);
+			container?.onMouseMove(this.mouseCoord);
+		}
 	}
 
 	onMouseLeftClick(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
 		this.mouseCoord.x = event.clientX - rect.left;
 		this.mouseCoord.y = event.clientY - rect.top;
-		const card = this.grid.onMouseLeftClick(this.mouseCoord);
-		if (card) {
-			this.rules.onCardClick(this, card);
-		} else {
-			this.hand.onMouseLeftClick(this.mouseCoord);
+
+		for (let containerName of this.containers.keys()) {
+			const container = this.containers.get(containerName);
+			const card = container?.onMouseLeftClick(this.mouseCoord);
+			if (card) {
+				this.rules.onCardClick(this, card);
+				return;
+			}
 		}
+		this.hand.onMouseLeftClick(this.mouseCoord);
 	}
 
 	onMouseLeftClickRelease(event: MouseEvent) {
 		const rect = this.canvas.getBoundingClientRect();
 		this.mouseCoord.x = event.clientX - rect.left;
 		this.mouseCoord.y = event.clientY - rect.top;
-		this.grid.onMouseLeftClickRelease(this.mouseCoord);
+
+		for (let containerName of this.containers.keys()) {
+			const container = this.containers.get(containerName);
+			container?.onMouseLeftClickRelease(this.mouseCoord);
+		}
 		this.hand.onLeftMouseClickRelease(this.mouseCoord);
 	}
 
 	__debugAddHand() {
 		this.hand.addCard(this.cardLib.getCard("empty")!);
+	}
+
+	registerContainer(name: string, container: CardContainer) {
+		this.containers.set(name, container);
+	}
+
+	getContainer(name: string): CardContainer | undefined {
+		return this.containers.get(name);
 	}
 }

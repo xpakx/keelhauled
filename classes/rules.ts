@@ -1,8 +1,8 @@
 import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
-import { Circle } from "./circle.js";
 import { Fan } from "./fan.js";
 import { Game, Position, Size } from "./game.js";
+import { Grid } from "./grid.js";
 
 export interface Rules {
 	init(game: Game): void;
@@ -19,17 +19,27 @@ export interface CardLoader {
 
 export class DebugRules implements Rules {
 	init(game: Game): void {
-		// game.setGridSize({width: 5, height: 5});
-		const board = new Fan({width: game.canvas.width, height: game.canvas.height});
-		game.grid = board;
+		const fan = new Fan(
+			{width: game.canvas.width, height: game.canvas.height},
+			{x: 0, y: game.canvas.height/2 - 30}
+		);
+		game.registerContainer("hand", fan);
 		const cards: Card[] = [];
 		for (let i = 0; i < 10; i++) {
 			cards.push(
 				game.cardLib.getCard("KC")!
 			);
 		}
-		board.setCards(cards);
-		// game.__debugAddHand();
+		fan.setCards(cards);
+
+		const grid = new Grid();
+		game.registerContainer("grid", grid);
+		grid.setGridSize(
+			{width: 4, height: 4},
+			{width: game.canvas.width, height: game.canvas.height},
+			game.cardLib,
+			this,
+		);
 	}
 
 	onCardClick(_game: Game, card: Card, _coord?: Position): void {
@@ -45,7 +55,7 @@ export class DebugRules implements Rules {
 	}
 
 	drawCard(): string | undefined {
-	    return "empty";
+	    return "KC";
 	}
 }
 
@@ -117,7 +127,14 @@ export class PairsMemoryGameRules implements Rules {
 		this.cardsInGame = [...chosen, ...chosen];
 		this.cardsInGame.sort(() => Math.random() - 0.5);
 
-		game.setGridSize({width: this.size.width, height: this.size.height});
+		const grid = new Grid();
+		game.registerContainer("grid", grid);
+		grid.setGridSize(
+			{width: 4, height: 4},
+			{width: game.canvas.width, height: game.canvas.height},
+			game.cardLib,
+			this,
+		);
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
@@ -163,7 +180,9 @@ export class PairsMemoryGameRules implements Rules {
 	}
 
 	isGameOver(game: Game): boolean {
-		return !this.locked && game.grid.getCards().every(c => c.flipped);
+		const grid = game.getContainer("grid");
+		if (!grid) return false;
+		return !this.locked && grid.getCards().every(c => c.flipped);
 	}
 
 	getScore(): number {
