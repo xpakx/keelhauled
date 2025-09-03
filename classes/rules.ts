@@ -11,6 +11,7 @@ export interface Rules {
 	drawCard(): string | undefined;
 	getScore?(): number;
 	getState?(): string;
+	onGameOver?(game: Game): void;
 }
 
 export interface CardLoader {
@@ -194,6 +195,26 @@ export class PairsMemoryGameRules implements Rules {
 
 	drawCard(): string | undefined {
 		return this.cardsInGame.pop();
+	}
+
+	onGameOver(game: Game): void {
+		this.locked = true;
+		const grid = game.getContainer("grid");
+		if (!grid) return;
+
+		setTimeout(() => {
+			grid.getCards().forEach(c => c.flipCard());
+			setTimeout(() => {
+				this.init(game);
+				const grid = game.getContainer("grid");
+				if (!grid) return;
+				grid.getCards().forEach(c => {
+					c.animation = undefined;
+					c.dealt = true
+				});
+				this.locked = false;
+			}, 300);
+		}, 500);
 	}
 }
 

@@ -1,6 +1,5 @@
 import { CardLibrary } from "./card-lib.js";
 import { Card } from "./card.js";
-import { Grid } from "./grid.js";
 import { Hand } from "./hand.js";
 import { Rules } from "./rules.js";
 
@@ -72,6 +71,7 @@ export class Game {
 		}
 
 		if (this.rules.isGameOver(this)) {
+			this.rules.onGameOver?.(this)
 			console.log("Game Over!", this.rules.getState?.());
 		}
 	}
