@@ -19,6 +19,8 @@ export class Fan implements CardContainer {
 
 	maxCards: number = 10;
 
+	visualDebug: boolean = false;
+
 	constructor(canvasSize: Size, center: Position = {x: 0, y: 0}, radius: number = 200, curveFn: CurveFn = Fan.defaultArc) {
 		this.center = {
 			x: canvasSize.width / 2 + center.x,
@@ -61,6 +63,10 @@ export class Fan implements CardContainer {
 			
 		});
 
+		if (this.visualDebug) {
+			this.cards.forEach((card) => ctx.fillRect(card.coord.x, card.coord.y, 10, 10))
+			ctx.fillRect(this.center.x, this.center.y, 10, 10);
+		}
 	}
 
 	onMouseMove(position: Position): void {

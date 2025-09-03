@@ -18,7 +18,7 @@ window.onload = async () => {
 	let cardLoader = new TraditionalDeckCardLoader();
 	await cardLoader.load(cardLib);
 
-	let game = new Game(context, canvas, cardLib, new DebugRules());
+	let game = new Game(context, canvas, cardLib, new PairsMemoryGameRules());
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);
