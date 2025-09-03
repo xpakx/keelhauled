@@ -19,7 +19,12 @@ export interface CardLoader {
 }
 
 export class DebugRules implements Rules {
+	cards: string[] = [];
+
 	init(game: Game): void {
+		const deck: Deck = game.cardLib.toDeck();
+		deck.shuffle();
+
 		const fan = new Fan(
 			{width: game.canvas.width, height: game.canvas.height},
 			{x: 0, y: game.canvas.height/2 - 30}
@@ -27,12 +32,11 @@ export class DebugRules implements Rules {
 		game.registerContainer("hand", fan);
 		const cards: Card[] = [];
 		for (let i = 0; i < 10; i++) {
-			cards.push(
-				game.cardLib.getCard("KC")!
-			);
+			cards.push(deck.draw()!);
 		}
 		fan.setCards(cards);
 
+		this.cards = deck.cards;
 		const grid = new Grid();
 		game.registerContainer("grid", grid);
 		grid.setGridSize(
@@ -44,6 +48,7 @@ export class DebugRules implements Rules {
 	}
 
 	onCardClick(_game: Game, card: Card, _coord?: Position): void {
+		console.log(`Card ${card.name} clicked`);
 		card.revealCard();
 	}
 
@@ -56,7 +61,7 @@ export class DebugRules implements Rules {
 	}
 
 	drawCard(): string | undefined {
-	    return "KC";
+	    return this.cards.pop();
 	}
 }
 
