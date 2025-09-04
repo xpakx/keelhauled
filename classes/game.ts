@@ -1,5 +1,5 @@
 import { CardLibrary } from "./card-lib.js";
-import { Card } from "./card.js";
+import { CardContainer } from "./containers/card-container.js";
 import { Hand } from "./hand.js";
 import { Rules } from "./rules.js";
 
@@ -11,14 +11,6 @@ export interface Size {
 export interface Position {
 	x: number;
 	y: number;
-}
-
-export interface CardContainer {
-	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D): void;
-	onMouseMove(position: Position): void;
-	onMouseLeftClick(position: Position): Card | undefined;
-	onMouseLeftClickRelease(position: Position): void;
-	getCards(): Card[];
 }
 
 export class Game {

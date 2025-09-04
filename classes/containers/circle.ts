@@ -1,5 +1,6 @@
-import { Card } from "./card.js";
-import { CardContainer, Position, Size } from "./game.js";
+import { Card } from "../card.js";
+import { Position, Size } from "../game.js";
+import { CardContainer } from "./card-container.js";
 
 interface CardGridData {
 	card: Card;

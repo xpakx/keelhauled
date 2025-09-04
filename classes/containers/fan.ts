@@ -1,5 +1,6 @@
-import { Card } from "./card";
-import { CardContainer, Position, Size } from "./game";
+import { Card } from "../card.js";
+import { Position, Size } from "../game.js";
+import { CardContainer } from "./card-container.js";
 
 export type CurveFn = (t: number, radius: number, center: Position) => { x: number; y: number; angle?: number };
 

@@ -1,8 +1,8 @@
 import { CardLibrary, Deck } from "./card-lib.js";
 import { Card } from "./card.js";
-import { Fan } from "./fan.js";
+import { Fan } from "./containers/fan.js";
+import { Grid } from "./containers/grid.js";
 import { Game, Position, Size } from "./game.js";
-import { Grid } from "./grid.js";
 
 export interface Rules {
 	init(game: Game): void;
