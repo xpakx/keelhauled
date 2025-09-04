@@ -14,16 +14,19 @@ export class Assets {
 		});
 	}
 
-	static async splitGridImage(img: HTMLImageElement, rows: number, cols: number) {
+	static async splitGridImage(
+		img: HTMLImageElement,
+		rows: number,
+		cols: number): Promise<HTMLImageElement[]> {
 		const cellWidth = img.width / cols;
 		const cellHeight = img.height / rows;
-		const cells = [];
-		const canvas = new OffscreenCanvas(cellWidth, cellHeight);
-		const ctx = canvas.getContext("2d");
-		if (!ctx) throw new Error("No 2D context!");
+		const cells: Promise<HTMLImageElement>[] = [];
 
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < cols; x++) {
+				const canvas = new OffscreenCanvas(cellWidth, cellHeight);
+				const ctx = canvas.getContext("2d");
+				if (!ctx) throw new Error("No 2D context!");
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				ctx.drawImage(
 					img,
@@ -33,14 +36,19 @@ export class Assets {
 					cellWidth, cellHeight
 				);
 
-				const blob = await canvas.convertToBlob();
-				const cellImg = new Image();
-				cellImg.src = URL.createObjectURL(blob);
-				cellImg.onload = () => URL.revokeObjectURL(cellImg.src);
-				cells.push(cellImg);
+				const promise = canvas
+					.convertToBlob()
+					.then(async blob => {
+						const url = URL.createObjectURL(blob!);
+						const img = await Assets.loadImage(url);
+						URL.revokeObjectURL(url);
+						return img;
+					});
+
+				cells.push(promise);
 			}
 		}
 
-		return cells;
+		return Promise.all(cells);
 	}
 }
