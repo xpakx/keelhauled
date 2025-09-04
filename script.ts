@@ -1,6 +1,6 @@
 import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
-import { DebugRules, PairGameCardLoader, PairsMemoryGameRules, TraditionalDeckCardLoader } from "./classes/rules.js";
+import { CardLoader, DebugRules, DefaultCardLoader, PairGameCardLoader, PairsMemoryGameRules, Rules, TraditionalDeckCardLoader } from "./classes/rules.js";
 
 window.onload = async () => {
 	const canvas = document.getElementById('gameCanvas') as (HTMLCanvasElement | null);
@@ -14,11 +14,15 @@ window.onload = async () => {
 		return;
 	}
 
+	const params = new URLSearchParams(window.location.search);
+	const rulesName = params.get("rules") || "memory"; 
+	const loaderName = params.get("loader") || "traditional"; 
+
 	let cardLib = new CardLibrary();
-	let cardLoader = new TraditionalDeckCardLoader();
+	let cardLoader = nameToLoader(loaderName);
 	await cardLoader.load(cardLib);
 
-	let game = new Game(context, canvas, cardLib, new PairsMemoryGameRules());
+	let game = new Game(context, canvas, cardLib, nameToRules(rulesName));
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);
@@ -44,4 +48,31 @@ window.onload = async () => {
 		}
 	});
 
+}
+
+function nameToRules(name: string): Rules {
+	switch (name) {
+		case "debug": 
+			return new DebugRules();
+		case "memory": 
+			return new PairsMemoryGameRules();
+		default:
+			return new PairsMemoryGameRules();
+
+	}
+}
+
+
+function nameToLoader(name: string): CardLoader {
+	switch (name) {
+		case "traditional": 
+			return new TraditionalDeckCardLoader();
+		case "memory": 
+			return new PairGameCardLoader();
+		case "basic": 
+			return new DefaultCardLoader();
+		default:
+			return new TraditionalDeckCardLoader();
+
+	}
 }
