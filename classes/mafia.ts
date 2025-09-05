@@ -67,13 +67,17 @@ export class MafiaRules implements Rules {
     }
 
     onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
+	    const lib = game.cardLib as MafiaLib<ActorType>;
 	    const card = slot.getCard()
 	    if (!card) return;
 
 	    if (card.flipped) {
 		    // TODO
 	    } else {
+		    const board = game.getContainer("board") as Circle<CardData> | undefined;
+		    if (!board) return;
 		    card.flipCard();
+		    lib.on("onReveal", slot, board.cards);
 		    game.audio?.play("flip", {offset: 0.2});
 	    }
     }
@@ -139,6 +143,15 @@ export class MafiaLib<T> extends CardLibrary {
 			lying: actor.lying ? true : false,
 		});
 
+		this.skills.set(actor.name, {
+			onDeal: actor.onDeal,
+			onReveal: actor.onReveal,
+			onKill: actor.onKill,
+			onSkill: actor.onSkill,
+			onDayEnd: actor.onDayEnd,
+		});
+	}
+
 	generateData(name: string): CardData | undefined {
 		let actorData = this.actorData.get(name);
 		if (!actorData) return;
@@ -177,11 +190,22 @@ export function getMafiaLibrary(): CardLibrary {
 	// TODO register skills
 	lib.addCardDefinition("villager", {name: "hunter"});
 	lib.addCardDefinition("villager", {name: "enlightened"});
-	lib.addCardDefinition("villager", {name: "confessor"});
+	lib.addCardDefinition("villager", {
+		name: "confessor",
+		onReveal: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+			if (data.evil || data.lying) {
+				console.log("I'm dizzy");
+			} else {
+				console.log("I'm good");
+			}
+		},
+	});
 	lib.addCardDefinition("villager", {name: "medium"});
 	lib.addCardDefinition("villager", {name: "empress"});
 
-	lib.addCardDefinition("minion", {name: "minion"});
+	lib.addCardDefinition("minion", {name: "minion", evil: true, lying: true});
 
 	return lib;
 }
