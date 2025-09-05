@@ -202,23 +202,17 @@ export function getMafiaLibrary(): CardLibrary {
 				return;
 			}
 
-			let closestIndex = evilIndices[0];
-			let minDistance = Math.abs(closestIndex - hunterIndex);
+			const cw = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length, "clockwise");
+			const ccw = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length, "counterclockwise");
+			const minDistance = Math.min(cw, ccw);
 
-			for (const idx of evilIndices) {
-				const dist = Math.abs(idx - hunterIndex);
-				if (dist < minDistance) {
-					minDistance = dist;
-					closestIndex = idx;
-				}
-			}
 			const isLying = card.getData()?.lying;
 
 			let reportedDistance;
 			if (isLying) {
 				reportedDistance = Math.floor(Math.random() * (cards.length - 1)) + 1;
 			} else {
-				reportedDistance = Math.abs(closestIndex - hunterIndex);
+				reportedDistance = Math.abs(minDistance);
 			}
 
 			console.log(`I'm ${minDistance} cards away from closest evil`);
@@ -240,26 +234,9 @@ export function getMafiaLibrary(): CardLibrary {
 				return;
 			}
 
-			let closestIndex = evilIndices[0];
-			let minDistance = total;
+			const cw = MafiaHelper.closestDistance(hunterIndex, evilIndices, total, "clockwise");
+			const ccw = MafiaHelper.closestDistance(hunterIndex, evilIndices, total, "counterclockwise");
 
-			for (const idx of evilIndices) {
-				const cw = (idx - hunterIndex + total) % total;
-				const ccw = (hunterIndex - idx + total) % total;
-
-				const distance = Math.min(cw, ccw);
-				if (distance < minDistance) {
-					minDistance = distance;
-					closestIndex = idx;
-				} else if (distance === minDistance) {
-					const currentCw = (closestIndex - hunterIndex + total) % total;
-					const currentCcw = (hunterIndex - closestIndex + total) % total;
-					if (currentCw < currentCcw) closestIndex = idx;
-				}
-			}
-
-			const cw = (closestIndex - hunterIndex + total) % total;
-			const ccw = (hunterIndex - closestIndex + total) % total;
 			let direction: string;
 			if (cw === ccw) direction = "equidistant";
 			else direction = cw < ccw ? "clockwise" : "counterclockwise";
@@ -391,3 +368,44 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 		return img;
 	}
 }
+
+class MafiaHelper {
+	static closestIndexClockwise(selfIndex: number, indices: number[], len: number) {
+		let closestIndex = indices[0];
+		let minDistance = len;
+
+		for (const idx of indices) {
+			const distance = (idx - selfIndex + len) % len;
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestIndex = idx;
+			} 
+		}
+		return {index: closestIndex, distance: minDistance};
+	}
+
+	static closestIndexCounterclockwise(selfIndex: number, indices: number[], len: number) {
+		let closestIndex = indices[0];
+		let minDistance = len;
+
+		for (const idx of indices) {
+			const distance = (selfIndex - idx + len) % len;
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestIndex = idx;
+			} 
+		}
+		return {index: closestIndex, distance: minDistance};
+	}
+
+	static closestIndex(selfIndex: number, indices: number[], len: number, dir: "clockwise" | "counterclockwise") {
+		if (dir === "clockwise") return this.closestIndexClockwise(selfIndex, indices, len).index;
+		else return this.closestIndexCounterclockwise(selfIndex, indices, len).index;
+	}
+
+	static closestDistance(selfIndex: number, indices: number[], len: number, dir: "clockwise" | "counterclockwise") {
+		if (dir === "clockwise") return this.closestIndexClockwise(selfIndex, indices, len).distance;
+		else return this.closestIndexCounterclockwise(selfIndex, indices, len).distance;
+	}
+}
+
