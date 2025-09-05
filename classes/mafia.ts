@@ -37,7 +37,7 @@ export class MafiaRules implements Rules {
 	    subdeck.join(deckMinions.subdeck(1))
 	    subdeck.shuffle();
 
-	    const board = new Circle(
+	    const board = new Circle<CardData>(
 		    {x: 0, y: 0}, 
 		    {width: game.canvas.width, height: game.canvas.height},
 		    200,
@@ -59,6 +59,7 @@ export class MafiaRules implements Rules {
 			    if (newIdentity) {
 				    data.identity =  newIdentity.name;
 				    slot.putCard(newIdentity, "empty");
+				    lib.on("onDisguise", slot, []);
 			    }
 		    }
 	    }
@@ -95,6 +96,7 @@ export type SkillFn = (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) =>
 interface ActorSkills {
 	onDeal?: SkillFn,
 	onReveal?: SkillFn,
+	onDisguise?: SkillFn,
 	onKill?: SkillFn,
 	onSkill?: SkillFn,
 	onDayEnd?: SkillFn,
@@ -112,6 +114,7 @@ interface ActorDefinition {
 	onKill?: SkillFn,
 	onSkill?: SkillFn,
 	onDayEnd?: SkillFn,
+	onDisguise?: SkillFn,
 }
 
 interface ActorData {
@@ -148,6 +151,7 @@ export class MafiaLib<T> extends CardLibrary {
 			onKill: actor.onKill,
 			onSkill: actor.onSkill,
 			onDayEnd: actor.onDayEnd,
+			onDisguise: actor.onDisguise,
 		});
 	}
 
@@ -192,10 +196,7 @@ export function getMafiaLibrary(): CardLibrary {
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
 			const hunterIndex = cards.indexOf(card);
 
-			const evilIndices = cards
-				.map((slot, i) => ({ i, slot }))
-				.filter(({ slot }) => slot.getData()?.evil)
-				.map(({ i }) => i);
+			const evilIndices = MafiaHelper.getEvilIndices(cards);
 
 			if (evilIndices.length === 0) {
 				console.log("There is no evil");
@@ -224,10 +225,7 @@ export function getMafiaLibrary(): CardLibrary {
 			const hunterIndex = cards.indexOf(card);
 			const total = cards.length;
 
-			const evilIndices = cards
-				.map((slot, i) => ({ i, slot }))
-				.filter(({ slot }) => slot.getData()?.evil)
-				.map(({ i }) => i);
+			const evilIndices = MafiaHelper.getEvilIndices(cards);
 
 			if (evilIndices.length === 0) {
 				console.log("There is no evil");
@@ -252,14 +250,17 @@ export function getMafiaLibrary(): CardLibrary {
 	lib.addCardDefinition("villager", {
 		name: "confessor",
 		onReveal: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
-			const data = card.getData();
-			if (!data) return;
-			if (data.evil || data.lying) {
+			if (MafiaHelper.isEvil(card) || MafiaHelper.isCorrupted(card)) {
 				console.log("I'm dizzy");
 			} else {
 				console.log("I'm good");
 			}
 		},
+		onDisguise: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+			data.lying = false;
+		}
 	});
 	lib.addCardDefinition("villager", {
 		name: "medium",
@@ -440,6 +441,35 @@ class MafiaHelper {
 	static closestDistance(selfIndex: number, indices: number[], len: number, dir: "clockwise" | "counterclockwise") {
 		if (dir === "clockwise") return this.closestIndexClockwise(selfIndex, indices, len).distance;
 		else return this.closestIndexCounterclockwise(selfIndex, indices, len).distance;
+	}
+
+
+	static isEvil(card: CardSlot<CardData>) {
+		return card.getData()?.evil;
+	}
+
+	static getEvilCards(cards: CardSlot<CardData>[]) {
+		return cards
+			.map((slot, i) => ({ i, slot }))
+			.filter(({ slot }) => this.isEvil(slot))
+	}
+
+	static getEvilIndices(cards: CardSlot<CardData>[]) {
+		return this.getEvilCards(cards)
+			.map(({ i }) => i);
+	}
+
+	static isLying(card: CardSlot<CardData>) {
+		return card.getData()?.lying;
+	}
+
+	static isDisguised(card: CardSlot<CardData>) {
+		return card.getData()?.realIdentity !== undefined && 
+			card.getData()?.realIdentity !== card.getData()?.identity;
+	}
+
+	static isCorrupted(card: CardSlot<CardData>) {
+		return this.isLying(card) || this.isDisguised(card);
 	}
 }
 
