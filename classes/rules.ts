@@ -1,13 +1,13 @@
 import { Assets } from "./assets.js";
 import { CardLibrary, Deck } from "./card-lib.js";
-import { Card } from "./card.js";
+import { Card, CardSlot } from "./card.js";
 import { Fan } from "./containers/fan.js";
 import { Grid } from "./containers/grid.js";
 import { Game, Position, Size } from "./game.js";
 
 export interface Rules {
 	init(game: Game): void;
-	onCardClick(game: Game, card: Card, coord?: Position): void;
+	onCardClick(game: Game, slot: CardSlot<any>, coord?: Position): void;
 	isGameOver(game: Game): boolean;
 	drawCard(): string | undefined;
 	getScore?(): number;
@@ -48,7 +48,9 @@ export class DebugRules implements Rules {
 		);
 	}
 
-	onCardClick(_game: Game, card: Card, _coord?: Position): void {
+	onCardClick(_game: Game, slot: CardSlot<any>, _coord?: Position): void {
+		const card = slot.getCard();
+		if (!card) return;
 		console.log(`Card ${card.name} clicked`);
 		card.revealCard();
 	}
@@ -104,7 +106,10 @@ export class PairsMemoryGameRules implements Rules {
 		);
 	}
 
-	onCardClick(game: Game, card: Card, _coord?: Position): void {
+	onCardClick(game: Game, slot: CardSlot<any>, _coord?: Position): void {
+		const card = slot.getCard();
+		if (!card) return;
+
 		if (this.locked || !card.safeToFlip()) return;
 
 		card.revealCard();

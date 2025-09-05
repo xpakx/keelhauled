@@ -1,20 +1,15 @@
-import { Card, CardSlot } from "../card.js";
+import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
 import { CardContainer } from "./card-container.js";
 
-interface CardGridData {
-	card: Card;
-	coord: Position;
-	zIndex: number;
-}
-
-export class Circle implements CardContainer {
+export class Circle<T> implements CardContainer<T> {
 	center: Position;
 	radius: number;
-	cards: CardSlot<unknown>[] = [];
+	cards: CardSlot<T>[] = [];
 	hoveredIndex: number = -1;
 	angleOffset: number = -Math.PI / 2; 
 	drawOrder: number[] = [];
+	initFn?: StartDataFn<T>;
 
 	constructor(center: Position, canvasSize: Size, radius: number) {
 		this.center = {
@@ -24,9 +19,14 @@ export class Circle implements CardContainer {
 		this.radius = radius;
 	}
 
+	setDataFunction(fn: StartDataFn<T>) {
+		this.initFn = fn;
+	}
+
 	setCards(cards: Card[]) {
 		this.cards = cards.map(c => {
-			const slot = new CardSlot({x: 0, y: 0}, 0);
+			const slot = new CardSlot<T>({x: 0, y: 0}, 0);
+			if (this.initFn) slot.setInitFunction(this.initFn);
 			slot.putCard(c);
 			return slot;
 		});
@@ -91,9 +91,9 @@ export class Circle implements CardContainer {
 		this.hoveredIndex = this.mouseToIndex(position) ?? -1;
 	}
 
-	onMouseLeftClick(position: Position): Card | undefined {
+	onMouseLeftClick(position: Position): CardSlot<T> | undefined {
 		const idx = this.mouseToIndex(position);
-		if (idx !== undefined) return this.cards[idx].getCard();
+		if (idx !== undefined) return this.cards[idx];
 	}
 
 	onMouseLeftClickRelease(_position: Position) { }

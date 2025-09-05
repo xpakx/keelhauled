@@ -26,7 +26,7 @@ export class Game {
 	hand: Hand;
 	rules: Rules;
 
-	containers: Map<string, CardContainer> = new Map();
+	containers: Map<string, CardContainer<any>> = new Map();
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -116,11 +116,11 @@ export class Game {
 		this.hand.addCard(this.cardLib.getCard("empty")!);
 	}
 
-	registerContainer(name: string, container: CardContainer) {
+	registerContainer(name: string, container: CardContainer<any>) {
 		this.containers.set(name, container);
 	}
 
-	getContainer(name: string): CardContainer | undefined {
+	getContainer<T>(name: string): CardContainer<T> | undefined {
 		return this.containers.get(name);
 	}
 }

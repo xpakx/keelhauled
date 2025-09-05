@@ -98,17 +98,24 @@ export class Card {
 	}
 }
 
+export type StartDataFn<T> = (name: string) => T;
+
 export class CardSlot<T> {
 	private cardData?: T;
 	private card?: Card;
 	coord: Position = {x: 0, y: 0};
 	zIndex: number = 0;
 	angle: number = 0;
+	initFn?: StartDataFn<T>;
 
 	constructor(coord: Position, zIndex: number = 0, angle: number = 0) {
 		this.coord = coord;
 		this.zIndex = zIndex;
 		this.angle = angle;
+	}
+
+	setInitFunction(fn: StartDataFn<T>) {
+		this.initFn = fn;
 	}
 
 	tick(timestamp: number, hovered: boolean): void {
@@ -138,5 +145,6 @@ export class CardSlot<T> {
 	putCard(card: Card, cardData?: T) {
 		this.card = card;
 		this.cardData = cardData;
+		if (this.initFn) this.cardData = this.initFn(card.name);
 	}
 }

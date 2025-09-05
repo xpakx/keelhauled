@@ -1,12 +1,12 @@
-import { Card, CardSlot } from "../card.js";
+import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
 import { CardContainer } from "./card-container.js";
 
 export type CurveFn = (t: number, radius: number, center: Position) => { x: number; y: number; angle?: number };
 
-export class Fan implements CardContainer {
+export class Fan<T> implements CardContainer<T> {
 	curveFn: CurveFn;
-	cards: CardSlot<unknown>[] = [];
+	cards: CardSlot<T>[] = [];
 	hoveredIndex: number = -1;
 	center: Position;
 	radius: number;
@@ -14,6 +14,8 @@ export class Fan implements CardContainer {
 	maxCards: number = 10;
 
 	visualDebug: boolean = false;
+
+	initFn?: StartDataFn<T>;
 
 	constructor(canvasSize: Size, center: Position = {x: 0, y: 0}, radius: number = 200, curveFn: CurveFn = Fan.defaultArc) {
 		this.center = {
@@ -32,7 +34,8 @@ export class Fan implements CardContainer {
 			const { x, y, angle } = this.curveFn(t, this.radius, this.center);
 			card.dealt = true; // DEBUG
 			card.flipped = true; // DEBUG
-			const slot = new CardSlot({x, y}, i, angle);
+			const slot = new CardSlot<T>({x, y}, i, angle);
+			if (this.initFn) slot.setInitFunction(this.initFn);
 			slot.putCard(card);
 			this.cards.push(slot);
 		});
@@ -66,9 +69,9 @@ export class Fan implements CardContainer {
 		this.hoveredIndex = this.mouseToIndex(position) ?? -1;
 	}
 
-	onMouseLeftClick(position: { x: number; y: number }): Card | undefined {
+	onMouseLeftClick(position: { x: number; y: number }): CardSlot<T> | undefined {
 		const idx = this.mouseToIndex(position);
-		if (idx !== undefined) return this.cards[idx].getCard();
+		if (idx !== undefined) return this.cards[idx];
 		return undefined;
 	}
 
@@ -113,5 +116,9 @@ export class Fan implements CardContainer {
 			y: center.y + -radius * Math.cos(theta) + radius/2,
 			angle: theta,
 		};
+	}
+
+	setDataFunction(fn: StartDataFn<T>) {
+		this.initFn = fn;
 	}
 }

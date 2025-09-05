@@ -1,22 +1,24 @@
 import { CardProducer } from "../card-lib.js";
-import { Card, CardSlot } from "../card.js";
+import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
 import { CardContainer } from "./card-container.js";
 import { Rules } from "../rules.js";
 
-export class Grid implements CardContainer {
+export class Grid<T> implements CardContainer<T> {
 	cellSize = 100;
 
 	coord: Position = {x: -1, y: -1};
 
 	gridSize: Size = {width: 0, height: 0};
 
-	grid: Card[][] = [];
-	cards: CardSlot<unknown>[] = [];
+	grid: CardSlot<T>[][] = [];
+	cards: CardSlot<T>[] = [];
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
 	gridEnd: Position = {x: 0, y:0};
+
+	initFn?: StartDataFn<T>;
 
 	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D) {
 		this.drawGrid(timestamp, ctx);
@@ -31,7 +33,6 @@ export class Grid implements CardContainer {
 			for (let j = 0; j < this.gridSize.height; j++) {
 				const card = cardSource.getCard(rules.drawCard() || "empty");
 				if (!card) continue;
-				this.grid[i][j] = card;
 
 				const x = -i * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
 				const y = -j * this.cellSize + this.gridSize.height*this.cellSize/2 - this.cellSize/2;
@@ -43,9 +44,11 @@ export class Grid implements CardContainer {
 				const zIndex = Math.abs(i - cx) + Math.abs(j - cy);
 				const maxDist = Math.abs(cx) + Math.abs(cy);
 
-				const slot = new CardSlot({x: i, y: j}, zIndex);
+				const slot = new CardSlot<T>({x: i, y: j}, zIndex);
+				if (this.initFn) slot.setInitFunction(this.initFn);
 				slot.putCard(card);
 				this.cards.push(slot);
+				this.grid[i][j] = slot;
 
 				card.deal({x, y}, (maxDist-zIndex)*300);
 			}
@@ -100,7 +103,7 @@ export class Grid implements CardContainer {
 		return {x: mapX, y: mapY};
 	}
 
-	onMouseLeftClick(position: Position): Card | undefined {
+	onMouseLeftClick(position: Position): CardSlot<T> | undefined {
 		const coord = this.mouseToGridCoord(position);
 		if (coord) {
 			return this.grid[coord.x][coord.y];
@@ -117,5 +120,9 @@ export class Grid implements CardContainer {
 
 	getCards(): Card[] {
 		return this.cards.map(c => c.getCard()).filter(c => c !== undefined);
+	}
+
+	setDataFunction(fn: StartDataFn<T>) {
+		this.initFn = fn;
 	}
 }
