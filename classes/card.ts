@@ -97,3 +97,44 @@ export class Card {
 		this.dealingAnimation.deal(delta, animationDelta);
 	}
 }
+
+export class CardSlot<T> {
+	private cardData?: T;
+	private card?: Card;
+	coord: Position = {x: 0, y: 0};
+	zIndex: number = 0;
+
+	constructor(coord: Position, zIndex: number = 0) {
+		this.coord = coord;
+		this.zIndex = zIndex
+	}
+
+	tick(timestamp: number, hovered: boolean): void {
+		this.card?.tick(timestamp, hovered);
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position: Position) {
+		this.card?.draw(ctx, position);
+	}
+
+	getData(): T | undefined {
+		return this.cardData;
+	}
+
+	hasCard() {
+		return this.card !== undefined;
+	}
+
+	getCard(): Card | undefined {
+		return this.card;
+	}
+
+	removeCard() {
+		this.card = undefined;
+	}
+
+	putCard(card: Card, cardData?: T) {
+		this.card = card;
+		this.cardData = cardData;
+	}
+}

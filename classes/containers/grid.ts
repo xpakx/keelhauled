@@ -1,14 +1,8 @@
 import { CardProducer } from "../card-lib.js";
-import { Card } from "../card.js";
+import { Card, CardSlot } from "../card.js";
 import { Position, Size } from "../game.js";
 import { CardContainer } from "./card-container.js";
 import { Rules } from "../rules.js";
-
-interface CardGridData {
-	card: Card;
-	coord: Position;
-	zIndex: number;
-}
 
 export class Grid implements CardContainer {
 	cellSize = 100;
@@ -18,7 +12,7 @@ export class Grid implements CardContainer {
 	gridSize: Size = {width: 0, height: 0};
 
 	grid: Card[][] = [];
-	cards: CardGridData[] = [];
+	cards: CardSlot<unknown>[] = [];
 
 	gridPixelSize: Size = {width: 0, height: 0};
 	gridOffset: Position = {x: 0, y:0};
@@ -49,7 +43,9 @@ export class Grid implements CardContainer {
 				const zIndex = Math.abs(i - cx) + Math.abs(j - cy);
 				const maxDist = Math.abs(cx) + Math.abs(cy);
 
-				this.cards.push({card, coord: {x: i, y: j}, zIndex});
+				const slot = new CardSlot({x: i, y: j}, zIndex);
+				slot.putCard(card);
+				this.cards.push(slot);
 
 				card.deal({x, y}, (maxDist-zIndex)*300);
 			}
@@ -69,12 +65,12 @@ export class Grid implements CardContainer {
 
 		ctx.translate(this.gridOffset.x + 0.5, this.gridOffset.y + 0.5);
 
-		for (let card of this.cards) {
-			const x = card.coord.x * this.cellSize;
-			const y = card.coord.y * this.cellSize;
-			const underCursor = card.coord.x == this.coord.x && card.coord.y == this.coord.y;
-			card.card.tick(timestamp, underCursor);
-			card.card.draw(ctx, {x, y});
+		for (let slot of this.cards) {
+			const x = slot.coord.x * this.cellSize;
+			const y = slot.coord.y * this.cellSize;
+			const underCursor = slot.coord.x == this.coord.x && slot.coord.y == this.coord.y;
+			slot.tick(timestamp, underCursor);
+			slot.draw(ctx, {x, y});
 		}
 
 		ctx.restore();
@@ -120,6 +116,6 @@ export class Grid implements CardContainer {
 	}
 
 	getCards(): Card[] {
-		return this.cards.map(c => c.card);
+		return this.cards.map(c => c.getCard()).filter(c => c !== undefined);
 	}
 }

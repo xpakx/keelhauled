@@ -1,4 +1,4 @@
-import { Card } from "../card.js";
+import { Card, CardSlot } from "../card.js";
 import { Position, Size } from "../game.js";
 import { CardContainer } from "./card-container.js";
 
@@ -11,7 +11,7 @@ interface CardGridData {
 export class Circle implements CardContainer {
 	center: Position;
 	radius: number;
-	cards: CardGridData[] = [];
+	cards: CardSlot<unknown>[] = [];
 	hoveredIndex: number = -1;
 	angleOffset: number = -Math.PI / 2; 
 	drawOrder: number[] = [];
@@ -26,11 +26,9 @@ export class Circle implements CardContainer {
 
 	setCards(cards: Card[]) {
 		this.cards = cards.map(c => {
-			return {
-				card: c,
-				coord: {x: 0, y: 0},
-				zIndex: 0,
-			}
+			const slot = new CardSlot({x: 0, y: 0}, 0);
+			slot.putCard(c);
+			return slot;
 		});
 		this.positionCards();
 	}
@@ -38,15 +36,18 @@ export class Circle implements CardContainer {
 	private positionCards() {
 		const n = this.cards.length;
 		for (let i = 0; i < n; i++) {
-			const card = this.cards[i];
+			const slot = this.cards[i];
+			const card = slot.getCard();
+			if (!card) continue;
+
 			const angle = (2 * Math.PI * i) / n + this.angleOffset;
 
-			card.coord.x = this.center.x + this.radius * Math.cos(angle) - card.card.size.width / 2;
-			card.coord.y = this.center.y + this.radius * Math.sin(angle) - card.card.size.height / 2;
-			card.zIndex = n - i;
-			const dx = this.center.x - card.coord.x - card.card.size.width / 2;
-			const dy = this.center.y - card.coord.y - card.card.size.height / 2;
-			this.cards[i].card.deal({ x: dx, y: dy }, i*150);
+			slot.coord.x = this.center.x + this.radius * Math.cos(angle) - card.size.width / 2;
+			slot.coord.y = this.center.y + this.radius * Math.sin(angle) - card.size.height / 2;
+			slot.zIndex = n - i;
+			const dx = this.center.x - slot.coord.x - card.size.width / 2;
+			const dy = this.center.y - slot.coord.y - card.size.height / 2;
+			card.deal({ x: dx, y: dy }, i*150);
 		}
 		this.sortCards();
 	}
@@ -64,12 +65,14 @@ export class Circle implements CardContainer {
 		const step = (2 * Math.PI) / this.cards.length;
 		const rawIndex = Math.round(angle / step) % this.cards.length;
 
-		const card = this.cards[rawIndex];
+		const slot = this.cards[rawIndex];
+		const card = slot.getCard();
+		if (!card) return -1;
 
-		const x0 = card.coord.x;
-		const y0 = card.coord.y;
-		const x1 = card.coord.x + card.card.size.width;
-		const y1 = card.coord.y + card.card.size.height;
+		const x0 = slot.coord.x;
+		const y0 = slot.coord.y;
+		const x1 = slot.coord.x + card.size.width;
+		const y1 = slot.coord.y + card.size.height;
 		if (mousePos.x < x0 || mousePos.x > x1) return;
 		if (mousePos.y < y0 || mousePos.y > y1) return;
 		return rawIndex;
@@ -77,10 +80,10 @@ export class Circle implements CardContainer {
 
 	nextFrame(timestamp: number, ctx: CanvasRenderingContext2D) {
 		for (let i of this.drawOrder) {
-			const card = this.cards[i];
+			const slot = this.cards[i];
 			const underCursor = i === this.hoveredIndex;
-			card.card.tick(timestamp, underCursor);
-			card.card.draw(ctx, { x: card.coord.x, y: card.coord.y });
+			slot.tick(timestamp, underCursor);
+			slot.draw(ctx, { x: slot.coord.x, y: slot.coord.y });
 		};
 	}
 
@@ -90,7 +93,7 @@ export class Circle implements CardContainer {
 
 	onMouseLeftClick(position: Position): Card | undefined {
 		const idx = this.mouseToIndex(position);
-		if (idx !== undefined) return this.cards[idx].card;
+		if (idx !== undefined) return this.cards[idx].getCard();
 	}
 
 	onMouseLeftClickRelease(_position: Position) { }
@@ -101,6 +104,6 @@ export class Circle implements CardContainer {
 	}
 
 	getCards(): Card[] {
-		return this.cards.map(c => c.card);
+		return this.cards.map(c => c.getCard()).filter(c => c !== undefined);
 	}
 }
