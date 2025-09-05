@@ -1,7 +1,7 @@
 import { AudioController } from "./classes/audio.js";
 import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
-import { MafiaRules } from "./classes/mafia.js";
+import { getMafiaLibrary, MafiaCardLoader, MafiaRules } from "./classes/mafia.js";
 import { CardLoader, DebugRules, DefaultCardLoader, PairGameCardLoader, PairsMemoryGameRules, Rules, TraditionalDeckCardLoader } from "./classes/rules.js";
 
 window.onload = async () => {
@@ -18,10 +18,9 @@ window.onload = async () => {
 
 	const params = new URLSearchParams(window.location.search);
 	const rulesName = params.get("rules") || "memory"; 
-	const loaderName = params.get("loader") || "traditional"; 
 
-	let cardLib = new CardLibrary();
-	let cardLoader = nameToLoader(loaderName);
+	let cardLib = nameToLibrary(rulesName);
+	let cardLoader = nameToLoader(rulesName);
 	await cardLoader.load(cardLib);
 
 	let game = new Game(context, canvas, cardLib, nameToRules(rulesName));
@@ -65,7 +64,7 @@ function nameToRules(name: string): Rules {
 		case "mafia": 
 			return new MafiaRules();
 		case "memory": 
-			return new PairsMemoryGameRules();
+		case "memoryTrad": 
 		default:
 			return new PairsMemoryGameRules();
 
@@ -75,14 +74,21 @@ function nameToRules(name: string): Rules {
 
 function nameToLoader(name: string): CardLoader {
 	switch (name) {
-		case "traditional": 
-			return new TraditionalDeckCardLoader();
 		case "memory": 
 			return new PairGameCardLoader();
 		case "basic": 
 			return new DefaultCardLoader();
+		case "mafia": 
+			return new MafiaCardLoader();
+		case "traditional":
+		case "memoryTrad": 
 		default:
 			return new TraditionalDeckCardLoader();
 
 	}
+}
+
+function nameToLibrary(name: string): CardLibrary {
+	if (name === "mafia") return getMafiaLibrary();
+	return new CardLibrary();
 }
