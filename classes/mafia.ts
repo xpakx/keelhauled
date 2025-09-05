@@ -44,6 +44,25 @@ export class MafiaRules implements Rules {
 	    );
 	    board.setDataFunction(dataFn);
 	    board.setCards(subdeck.getCards());
+
+	    for (let slot of board.cards) {
+		    const card = slot.getCard();
+		    if (!card) continue;
+		    const data = lib.generateData(card.name);
+		    if (!data) continue;
+		    slot.setData(data);
+		    if (data.evil) {
+			    const deck = lib.getDeckOf("villager");
+			    deck.shuffle();
+			    data.realIdentity = card.name;
+			    const newIdentity = deck.draw();
+			    if (newIdentity) {
+				    newIdentity.animation =  card.animation;
+				    slot.putCard(newIdentity);
+				    slot.setData(data);
+			    }
+		    }
+	    }
 	    game.registerContainer("board", board);
     }
 
@@ -119,6 +138,18 @@ export class MafiaLib<T> extends CardLibrary {
 			evil: actor.evil ? true : false,
 			lying: actor.lying ? true : false,
 		});
+
+	generateData(name: string): CardData | undefined {
+		let actorData = this.actorData.get(name);
+		if (!actorData) return;
+
+		return {
+			usableSkill: false,
+			skillUsed: false,
+			lying: actorData.lying,
+			evil: actorData.evil,
+			identity: name,
+		}
 	}
 
 	getType(type: T) {
