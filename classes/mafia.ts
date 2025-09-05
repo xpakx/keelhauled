@@ -294,7 +294,41 @@ export function getMafiaLibrary(): CardLibrary {
 			}
 		},
 	});
-	lib.addCardDefinition("villager", {name: "empress"});
+	lib.addCardDefinition("villager", {
+		name: "empress",
+		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const evilSlots = cards
+				.map((slot, i) => ({ slot, i }))
+				.filter(({ slot }) => slot.getData()?.evil)
+				.map(({ i }) => i);
+
+			const goodSlots = cards
+				.map((slot, i) => ({ slot, i }))
+				.filter(({ slot }) => !slot.getData()?.evil)
+				.map(({ i }) => i);
+
+			const isLying = card.getData()?.lying;
+
+			let picks;
+			if (!isLying) {
+				if (evilSlots.length === 0 || goodSlots.length < 2) {
+					console.log("Empress cannot deliver her prophecy.");
+					return;
+				}
+
+				const evilPick = evilSlots[Math.floor(Math.random() * evilSlots.length)];
+				const shuffledGoods = goodSlots.sort(() => Math.random() - 0.5);
+				const goodPicks = shuffledGoods.slice(0, 2);
+				picks = [evilPick, ...goodPicks];
+			} else {
+				const shuffledGoods = goodSlots.sort(() => Math.random() - 0.5);
+				picks = shuffledGoods.slice(0, 3);
+			}
+
+			picks = picks.sort(() => Math.random() - 0.5).map(i => i+1);
+			console.log(`1 of ${picks.join(", ")} is evil`);
+		}
+	});
 
 	lib.addCardDefinition("minion", {name: "minion", evil: true, lying: true});
 
