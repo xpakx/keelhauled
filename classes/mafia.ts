@@ -269,9 +269,7 @@ export function getMafiaLibrary(): CardLibrary {
 				return;
 			}
 
-			const cw = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length, "clockwise");
-			const ccw = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length, "counterclockwise");
-			const minDistance = Math.min(cw, ccw);
+			const distance = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length);
 
 			const isLying = card.getData()?.lying;
 
@@ -279,7 +277,7 @@ export function getMafiaLibrary(): CardLibrary {
 			if (isLying) {
 				reportedDistance = Math.floor(Math.random() * (cards.length - 1)) + 1;
 			} else {
-				reportedDistance = Math.abs(minDistance);
+				reportedDistance = distance;
 			}
 
 			console.log(`I'm ${reportedDistance} cards away from closest evil`);
@@ -288,7 +286,7 @@ export function getMafiaLibrary(): CardLibrary {
 	lib.addCardDefinition("villager", {
 		name: "enlightened",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
-			const hunterIndex = cards.indexOf(card);
+			const enlightenedIndex = cards.indexOf(card);
 			const total = cards.length;
 
 			const evilIndices = MafiaHelper.getEvilIndices(cards);
@@ -298,17 +296,8 @@ export function getMafiaLibrary(): CardLibrary {
 				return;
 			}
 
-			const cw = MafiaHelper.closestDistance(hunterIndex, evilIndices, total, "clockwise");
-			const ccw = MafiaHelper.closestDistance(hunterIndex, evilIndices, total, "counterclockwise");
-
-			let direction: string;
-			if (cw === ccw) direction = "equidistant";
-			else direction = cw < ccw ? "clockwise" : "counterclockwise";
-
-			if (card.getData()?.lying) {
-				const options = ["clockwise", "counterclockwise", "equidistant"].filter(d => d !== direction);
-				direction = options[Math.floor(Math.random() * options.length)];
-			} 
+			let direction = MafiaHelper.closestDirection(enlightenedIndex, evilIndices, total);
+			if (card.getData()?.lying) direction = MafiaHelper.getRandomDirection(direction);
 
 			console.log(`Closest evil is ${direction}`);
 		}
@@ -334,9 +323,7 @@ export function getMafiaLibrary(): CardLibrary {
 			const isLying = card.getData()?.lying;
 			
 			if (!isLying) {
-				const goodCharacters = cards
-					.map((slot, i) => ({ slot, i }))
-					.filter(({ slot }) => !slot.getData()?.evil);
+				const goodCharacters = MafiaHelper.getGoodCards(cards);
 
 				if (goodCharacters.length === 0) {
 					console.log("No good characters.");
@@ -347,10 +334,7 @@ export function getMafiaLibrary(): CardLibrary {
 
 				console.log(`#${i+1} is a real ${slot.getData()?.realIdentity ?? slot.getData()?.identity}`);
 			} else {
-				const disguisedCharacters = cards
-					.map((slot, i) => ({ slot, i }))
-					.filter(({ slot }) => slot.getData()?.realIdentity !== undefined);
-
+				const disguisedCharacters = MafiaHelper.getDisguisedCards(cards);
 				if (disguisedCharacters.length === 0) {
 					console.log("No disguised characters.");
 					return;
@@ -364,15 +348,8 @@ export function getMafiaLibrary(): CardLibrary {
 	lib.addCardDefinition("villager", {
 		name: "empress",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
-			const evilSlots = cards
-				.map((slot, i) => ({ slot, i }))
-				.filter(({ slot }) => slot.getData()?.evil)
-				.map(({ i }) => i);
-
-			const goodSlots = cards
-				.map((slot, i) => ({ slot, i }))
-				.filter(({ slot }) => !slot.getData()?.evil)
-				.map(({ i }) => i);
+			const evilSlots = MafiaHelper.getEvilIndices(cards);
+			const goodSlots = MafiaHelper.getGoodIndices(cards);
 
 			const isLying = card.getData()?.lying;
 
@@ -475,6 +452,8 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 	}
 }
 
+type Direction = "clockwise" | "counterclockwise" | "equidistant";
+
 class MafiaHelper {
 	static closestIndexClockwise(selfIndex: number, indices: number[], len: number) {
 		let closestIndex = indices[0];
@@ -509,11 +488,32 @@ class MafiaHelper {
 		else return this.closestIndexCounterclockwise(selfIndex, indices, len).index;
 	}
 
-	static closestDistance(selfIndex: number, indices: number[], len: number, dir: "clockwise" | "counterclockwise") {
+	static closestDistanceDir(selfIndex: number, indices: number[], len: number, dir: "clockwise" | "counterclockwise") {
 		if (dir === "clockwise") return this.closestIndexClockwise(selfIndex, indices, len).distance;
 		else return this.closestIndexCounterclockwise(selfIndex, indices, len).distance;
 	}
 
+	static closestDistance(selfIndex: number, indices: number[], len: number) {
+		const cw = this.closestDistanceDir(selfIndex, indices, len, "clockwise");
+		const ccw = MafiaHelper.closestDistanceDir(selfIndex, indices, len, "counterclockwise");
+		return Math.min(cw, ccw);
+	}
+
+	static closestDirection(selfIndex: number, indices: number[], len: number): Direction {
+		const cw = this.closestDistanceDir(selfIndex, indices, len, "clockwise");
+		const ccw = this.closestDistanceDir(selfIndex, indices, len, "counterclockwise");
+
+		if (cw === ccw) return "equidistant";
+		else return cw < ccw ? "clockwise" : "counterclockwise";
+	}
+
+	static getRandomDirection(exclude?: Direction): Direction {
+		let options: Direction[] = ["clockwise", "counterclockwise", "equidistant"];
+		if (exclude) {
+			options = options.filter(d => d !== exclude);
+		}
+		return options[Math.floor(Math.random() * options.length)];
+	}
 
 	static isEvil(card: CardSlot<CardData>) {
 		return card.getData()?.evil;
@@ -541,6 +541,32 @@ class MafiaHelper {
 
 	static isCorrupted(card: CardSlot<CardData>) {
 		return this.isLying(card) || this.isDisguised(card);
+	}
+
+	static isGood(card: CardSlot<CardData>) {
+		return !card.getData()?.evil;
+	}
+
+	static getGoodCards(cards: CardSlot<CardData>[]) {
+		return cards
+			.map((slot, i) => ({ i, slot }))
+			.filter(({ slot }) => this.isGood(slot))
+	}
+
+	static getGoodIndices(cards: CardSlot<CardData>[]) {
+		return this.getGoodCards(cards)
+			.map(({ i }) => i);
+	}
+
+	static getDisguisedCards(cards: CardSlot<CardData>[]) {
+		return cards
+			.map((slot, i) => ({ i, slot }))
+			.filter(({ slot }) => this.isDisguised(slot))
+	}
+
+	static getDisguisedIndices(cards: CardSlot<CardData>[]) {
+		return this.getDisguisedCards(cards)
+			.map(({ i }) => i);
 	}
 }
 
