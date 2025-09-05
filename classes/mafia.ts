@@ -224,7 +224,54 @@ export function getMafiaLibrary(): CardLibrary {
 			console.log(`I'm ${minDistance} cards away from closest evil`);
 		}
 	});
-	lib.addCardDefinition("villager", {name: "enlightened"});
+	lib.addCardDefinition("villager", {
+		name: "enlightened",
+		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const hunterIndex = cards.indexOf(card);
+			const total = cards.length;
+
+			const evilIndices = cards
+				.map((slot, i) => ({ i, slot }))
+				.filter(({ slot }) => slot.getData()?.evil)
+				.map(({ i }) => i);
+
+			if (evilIndices.length === 0) {
+				console.log("There is no evil");
+				return;
+			}
+
+			let closestIndex = evilIndices[0];
+			let minDistance = total;
+
+			for (const idx of evilIndices) {
+				const cw = (idx - hunterIndex + total) % total;
+				const ccw = (hunterIndex - idx + total) % total;
+
+				const distance = Math.min(cw, ccw);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closestIndex = idx;
+				} else if (distance === minDistance) {
+					const currentCw = (closestIndex - hunterIndex + total) % total;
+					const currentCcw = (hunterIndex - closestIndex + total) % total;
+					if (currentCw < currentCcw) closestIndex = idx;
+				}
+			}
+
+			const cw = (closestIndex - hunterIndex + total) % total;
+			const ccw = (hunterIndex - closestIndex + total) % total;
+			let direction: string;
+			if (cw === ccw) direction = "equidistant";
+			else direction = cw < ccw ? "clockwise" : "counterclockwise";
+
+			if (card.getData()?.lying) {
+				const options = ["clockwise", "counterclockwise", "equidistant"].filter(d => d !== direction);
+				direction = options[Math.floor(Math.random() * options.length)];
+			} 
+
+			console.log(`Closest evil is ${direction}`);
+		}
+	});
 	lib.addCardDefinition("villager", {
 		name: "confessor",
 		onReveal: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
