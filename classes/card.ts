@@ -103,10 +103,12 @@ export class CardSlot<T> {
 	private card?: Card;
 	coord: Position = {x: 0, y: 0};
 	zIndex: number = 0;
+	angle: number = 0;
 
-	constructor(coord: Position, zIndex: number = 0) {
+	constructor(coord: Position, zIndex: number = 0, angle: number = 0) {
 		this.coord = coord;
-		this.zIndex = zIndex
+		this.zIndex = zIndex;
+		this.angle = angle;
 	}
 
 	tick(timestamp: number, hovered: boolean): void {
