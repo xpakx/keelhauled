@@ -40,7 +40,7 @@ export class MafiaRules implements Rules {
 		game.registerContainer("board", board);
     }
 
-    onSlotClick(_game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
+    onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
 	    const card = slot.getCard()
 	    if (!card) return;
 
@@ -48,6 +48,7 @@ export class MafiaRules implements Rules {
 		    // TODO
 	    } else {
 		    card.flipCard();
+		    game.audio?.play("flip", {offset: 0.2});
 	    }
     }
 

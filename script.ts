@@ -1,3 +1,4 @@
+import { AudioController } from "./classes/audio.js";
 import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
 import { MafiaRules } from "./classes/mafia.js";
@@ -24,6 +25,12 @@ window.onload = async () => {
 	await cardLoader.load(cardLib);
 
 	let game = new Game(context, canvas, cardLib, nameToRules(rulesName));
+
+	if (rulesName === "mafia") {
+		let sound = new AudioController();
+		await sound.load("audio/flip.mp3", "flip");
+		game.setSound(sound);
+	}
 
 	const frame = (timestamp: number) => {
 		game.nextFrame(timestamp);

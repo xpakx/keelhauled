@@ -1,3 +1,4 @@
+import { AudioController } from "./audio.js";
 import { CardLibrary } from "./card-lib.js";
 import { CardContainer } from "./containers/card-container.js";
 import { Hand } from "./hand.js";
@@ -27,6 +28,7 @@ export class Game {
 	rules: Rules;
 
 	containers: Map<string, CardContainer<any>> = new Map();
+	audio?: AudioController;
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -42,6 +44,10 @@ export class Game {
 		this.hand.calculatePosition(this.defaultCanvasSize);
 		this.rules = rules;
 		this.rules.init(this);
+	}
+
+	setSound(audio: AudioController) {
+		this.audio = audio;
 	}
 
 	nextFrame(timestamp: number) {

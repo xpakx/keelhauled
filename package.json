@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest --passWithNoTests",
-    "build": "npx tsc && cp -r index.html styles.css images dist",
+    "build": "npx tsc && cp -r index.html styles.css images audio dist",
     "clean": "rm -rf dist/*",
     "serve": "python3 -m http.server --directory dist 8080"
   },
