@@ -12,6 +12,7 @@ interface CardData {
 	evil: boolean,
 	identity: string;
 	realIdentity?: string,
+	killed: boolean;
 }
 
 const dataFn: StartDataFn<CardData> = (name: string) => {
@@ -20,13 +21,25 @@ const dataFn: StartDataFn<CardData> = (name: string) => {
 		skillUsed: false,
 		lying: false,
 		evil: false,
+		killed: false,
 		identity: name,
 	}
 };
 
 export class MafiaRules implements Rules {
+	won: boolean = false;
 
     init(game: Game): void {
+	    const board = new Circle<CardData>(
+		    {x: 0, y: 0}, 
+		    {width: game.canvas.width, height: game.canvas.height},
+		    200,
+	    );
+	    game.registerContainer("board", board);
+	    this.startGame(game, board);
+    }
+
+    startGame(game: Game, board: Circle<CardData>) {
 	    const lib = game.cardLib as MafiaLib<ActorType>;
 	    const deckVillagers: Deck = lib.getDeckOf("villager");
 	    const deckMinions: Deck = lib.getDeckOf("minion");
@@ -37,11 +50,6 @@ export class MafiaRules implements Rules {
 	    subdeck.join(deckMinions.subdeck(1))
 	    subdeck.shuffle();
 
-	    const board = new Circle<CardData>(
-		    {x: 0, y: 0}, 
-		    {width: game.canvas.width, height: game.canvas.height},
-		    200,
-	    );
 	    board.setDataFunction(dataFn);
 	    board.setCards(subdeck.getCards());
 
@@ -63,7 +71,6 @@ export class MafiaRules implements Rules {
 			    }
 		    }
 	    }
-	    game.registerContainer("board", board);
     }
 
     onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
@@ -73,6 +80,8 @@ export class MafiaRules implements Rules {
 
 	    if (card.flipped) {
 		    // TODO
+		    if (!slot.getData()?.killed) game.audio?.play("hit");
+		    this.kill(slot, game);
 	    } else {
 		    const board = game.getContainer("board") as Circle<CardData> | undefined;
 		    if (!board) return;
@@ -82,8 +91,64 @@ export class MafiaRules implements Rules {
 	    }
     }
 
+    kill(slot: CardSlot<CardData>, game: Game) {
+	    let card = slot.getCard()
+	    if (!card) return;
+	    const data = slot.getData();
+	    if (!data) return;
+	    if (data.killed) return;
+	    const lib = game.cardLib as MafiaLib<ActorType>;
+	    
+	    if (data.realIdentity) {
+		    card = lib.getCard(data.realIdentity);
+		    if (!card) return;
+		    card.dealt = true;
+		    card.flipped = true;
+		    slot.putCard(card, "empty");
+		    data.identity = data.realIdentity;
+	    }
+
+	    data.killed = true;
+
+	    if(data.evil) {
+		    console.log(`Killed evil ${data.identity}.`);
+	    } else {
+		    console.log(`Killed ${data.identity}.`);
+	    }
+
+	    const board = game.getContainer("board") as Circle<CardData> | undefined;
+	    if (!board) return;
+
+	    const toKill = MafiaHelper.getEvilCards(board.cards)
+		    .filter(c => !c.slot.getData()?.killed)
+		    .length;
+	    if (toKill == 0) this.won = true;
+	
+    }
+ 
     isGameOver(_game: Game): boolean {
-	    return false;
+	    return this.won;
+    }
+
+    onGameOver(game: Game): void {
+	    console.log("You won!");
+	    this.won = false;
+
+	    const grid = game.getContainer("board");
+	    if (!grid) return;
+
+	    setTimeout(() => {
+		    grid.getCards().filter(c => c.flipped).forEach(c => c.flipCard());
+		    setTimeout(() => {
+			    const grid = game.getContainer("board") as Circle<CardData>;
+			    if (!grid) return;
+			    this.startGame(game, grid);
+			    grid.getCards().forEach(c => {
+				    c.animation = undefined;
+				    c.dealt = true
+			    });
+		    }, 500);
+	    }, 500);
     }
 
     drawCard(): string | undefined {
@@ -164,6 +229,7 @@ export class MafiaLib<T> extends CardLibrary {
 			skillUsed: false,
 			lying: actorData.lying,
 			evil: actorData.evil,
+			killed: false,
 			identity: name,
 		}
 	}

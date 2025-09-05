@@ -28,6 +28,7 @@ window.onload = async () => {
 	if (rulesName === "mafia") {
 		let sound = new AudioController();
 		await sound.load("audio/flip.mp3", "flip");
+		await sound.load("audio/hit.mp3", "hit");
 		game.setSound(sound);
 	}
 
