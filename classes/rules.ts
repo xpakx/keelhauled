@@ -10,7 +10,7 @@ export interface Rules {
 	onCardClick?(game: Game, slot: Card, coord?: Position): void;
 	onSlotClick?(game: Game, slot: CardSlot<any>, coord?: Position): void;
 	isGameOver(game: Game): boolean;
-	drawCard(): string | undefined;
+	/** @deprecated Use containers' setCards instead */ drawCard?(): string | undefined;
 	getScore?(): number;
 	getState?(): string;
 	onGameOver?(game: Game): void;
@@ -83,7 +83,6 @@ export class PairsMemoryGameRules implements Rules {
 	private locked: boolean = false;
 	private moves: number = 0;
 	private pairsFound: number = 0;
-	private cardsInGame: string[] = [];
 	private size: Size = {width: 4, height: 4};
 
 	init(game: Game): void {
@@ -93,7 +92,6 @@ export class PairsMemoryGameRules implements Rules {
 		const deck = game.cardLib.toDeck();
 		deck.shuffle();
 		const cardsInGame = deck.subdeck(pairsNeeded, {shuffled: true, doubled: true});
-		this.cardsInGame = cardsInGame.cards;
 
 		const grid = new Grid();
 		game.registerContainer("grid", grid);
@@ -103,6 +101,7 @@ export class PairsMemoryGameRules implements Rules {
 			game.cardLib,
 			this,
 		);
+		grid.setCards(cardsInGame.getCards());
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
@@ -159,10 +158,6 @@ export class PairsMemoryGameRules implements Rules {
 
 	getState(): string {
 		return `Moves: ${this.moves}, Pairs found: ${this.pairsFound}`;
-	}
-
-	drawCard(): string | undefined {
-		return this.cardsInGame.pop();
 	}
 
 	onGameOver(game: Game): void {

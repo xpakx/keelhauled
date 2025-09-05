@@ -31,26 +31,17 @@ export class Grid<T> implements CardContainer<T> {
 		for (let i = 0; i < this.gridSize.width; i++) {
 			this.grid[i] = Array(size.height);
 			for (let j = 0; j < this.gridSize.height; j++) {
-				const card = cardSource.getCard(rules.drawCard() || "empty");
-				if (!card) continue;
-
-				const x = -i * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
-				const y = -j * this.cellSize + this.gridSize.height*this.cellSize/2 - this.cellSize/2;
-
-
 				const cx = (this.gridSize.width - 1) / 2;
 				const cy = (this.gridSize.height - 1) / 2;
 
 				const zIndex = Math.abs(i - cx) + Math.abs(j - cy);
-				const maxDist = Math.abs(cx) + Math.abs(cy);
 
 				const slot = new CardSlot<T>({x: i, y: j}, zIndex);
 				if (this.initFn) slot.setInitFunction(this.initFn);
-				slot.putCard(card);
 				this.cards.push(slot);
 				this.grid[i][j] = slot;
-
-				card.deal({x, y}, (maxDist-zIndex)*300);
+				
+				if ((rules as any).drawCard) this.fallbackForDrawCard(slot, cardSource, rules); 
 			}
 		}
 		this.sortCards();
@@ -61,6 +52,42 @@ export class Grid<T> implements CardContainer<T> {
 		this.gridOffset.y = (canvasSize.height - this.gridPixelSize.height) / 2;
 		this.gridEnd.x = this.gridOffset.x + this.gridSize.width*this.cellSize;
 		this.gridEnd.y = this.gridOffset.y + this.gridSize.height*this.cellSize;
+	}
+
+	private fallbackForDrawCard(slot: CardSlot<T>, cardSource: CardProducer, rules: Rules) {
+		// @ts-expect-error using deprecated API intentionally
+		const card = cardSource.getCard(rules.drawCard() || "empty");
+		if (!card) return;
+
+		slot.putCard(card);
+		this.dealCard(slot);
+	}
+
+	private dealCard(slot: CardSlot<T>) {
+		const card = slot.getCard();
+		if (!card) return;
+
+		const x = -slot.coord.x * this.cellSize + this.gridSize.width*this.cellSize/2 - this.cellSize/2;
+		const y = -slot.coord.y * this.cellSize + this.gridSize.height*this.cellSize/2 - this.cellSize/2;
+
+		const cx = (this.gridSize.width - 1) / 2;
+		const cy = (this.gridSize.height - 1) / 2;
+
+		const maxDist = Math.abs(cx) + Math.abs(cy);
+
+		card.deal({x, y}, (maxDist-slot.zIndex)*300);
+	}
+
+	setCards(cards: Card[]) {
+		const n = Math.min(cards.length, this.cards.length);
+
+		for (let i = 0; i < n; i++) {
+			const card = cards[i];
+			const slot = this.cards[i];
+			slot.putCard(card);
+			this.dealCard(slot);
+
+		}
 	}
 
 	drawGrid(timestamp: number, ctx: CanvasRenderingContext2D) {
