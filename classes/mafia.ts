@@ -187,7 +187,43 @@ type ActorType = "villager" | "outcast" | "minion" | "demon";
 export function getMafiaLibrary(): CardLibrary {
 	const lib = new MafiaLib<ActorType>();
 	// TODO register skills
-	lib.addCardDefinition("villager", {name: "hunter"});
+	lib.addCardDefinition("villager", {
+		name: "hunter",
+		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const hunterIndex = cards.indexOf(card);
+
+			const evilIndices = cards
+				.map((slot, i) => ({ i, slot }))
+				.filter(({ slot }) => slot.getData()?.evil)
+				.map(({ i }) => i);
+
+			if (evilIndices.length === 0) {
+				console.log("There is no evil");
+				return;
+			}
+
+			let closestIndex = evilIndices[0];
+			let minDistance = Math.abs(closestIndex - hunterIndex);
+
+			for (const idx of evilIndices) {
+				const dist = Math.abs(idx - hunterIndex);
+				if (dist < minDistance) {
+					minDistance = dist;
+					closestIndex = idx;
+				}
+			}
+			const isLying = card.getData()?.lying;
+
+			let reportedDistance;
+			if (isLying) {
+				reportedDistance = Math.floor(Math.random() * (cards.length - 1)) + 1;
+			} else {
+				reportedDistance = Math.abs(closestIndex - hunterIndex);
+			}
+
+			console.log(`I'm ${minDistance} cards away from closest evil`);
+		}
+	});
 	lib.addCardDefinition("villager", {name: "enlightened"});
 	lib.addCardDefinition("villager", {
 		name: "confessor",
