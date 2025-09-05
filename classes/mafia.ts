@@ -57,9 +57,7 @@ export class MafiaRules implements Rules {
 			    data.realIdentity = card.name;
 			    const newIdentity = deck.draw();
 			    if (newIdentity) {
-				    newIdentity.animation =  card.animation;
-				    slot.putCard(newIdentity);
-				    slot.setData(data);
+				    slot.putCard(newIdentity, "empty");
 			    }
 		    }
 	    }

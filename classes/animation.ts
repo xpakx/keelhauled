@@ -40,7 +40,6 @@ export class FlippingAnimation implements Animation {
 
 	tick(timestamp: number, card: Card): undefined {
 		if (this.markForFlipping) {
-			console.log("Starting flipping");
 			this.targetFlipped = !card.flipped;
 			this.flipping = true;
 			this.flipStartTime = timestamp;

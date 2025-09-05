@@ -146,9 +146,15 @@ export class CardSlot<T> {
 		this.card = undefined;
 	}
 
-	putCard(card: Card, cardData?: T) {
+	putCard(card: Card, cardData: T | "empty" | "default" = "default") {
+		if (this.card?.animation) {
+			card.animation = this.card.animation;
+		}
 		this.card = card;
-		this.cardData = cardData;
-		if (this.initFn) this.cardData = this.initFn(card.name);
+		if (cardData == "default") {
+			if (this.initFn) this.cardData = this.initFn(card.name);
+		} else if (cardData !== "empty") {
+			this.cardData = cardData;
+		}
 	}
 }
