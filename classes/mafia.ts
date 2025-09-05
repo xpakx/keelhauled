@@ -55,7 +55,7 @@ export class MafiaRules implements Rules {
 			    const deck = lib.getDeckOf("villager");
 			    deck.shuffle();
 			    data.realIdentity = card.name;
-			    const newIdentity = deck.draw();
+			    const newIdentity = deck.getRandomCard();
 			    if (newIdentity) {
 				    data.identity =  newIdentity.name;
 				    slot.putCard(newIdentity, "empty");
