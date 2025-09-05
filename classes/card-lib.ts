@@ -92,6 +92,10 @@ export class Deck implements CardProducer {
 		return this.cardLib.getCard(name);
 	}
 
+	getCards(): Card[] {
+		return this.cards.map(c => this.cardLib.getCard(c)).filter(c => c!== undefined);
+	}
+
 	getRandomCard(): Card | undefined {
 		if (!this.cards.length) return undefined;
 		const idx = Math.floor(Math.random() * this.cards.length);
