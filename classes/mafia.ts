@@ -284,14 +284,45 @@ export function getMafiaLibrary(): CardLibrary {
 			}
 		},
 	});
-	lib.addCardDefinition("villager", {name: "medium"});
+	lib.addCardDefinition("villager", {
+		name: "medium",
+		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const isLying = card.getData()?.lying;
+			
+			if (!isLying) {
+				const goodCharacters = cards
+					.map((slot, i) => ({ slot, i }))
+					.filter(({ slot }) => !slot.getData()?.evil);
+
+				if (goodCharacters.length === 0) {
+					console.log("No good characters.");
+					return;
+				}
+
+				const { i, slot } = goodCharacters[Math.floor(Math.random() * goodCharacters.length)];
+
+				console.log(`#${i+1} is a real ${slot.getData()?.realIdentity ?? slot.getData()?.identity}`);
+			} else {
+				const disguisedCharacters = cards
+					.map((slot, i) => ({ slot, i }))
+					.filter(({ slot }) => slot.getData()?.realIdentity !== undefined);
+
+				if (disguisedCharacters.length === 0) {
+					console.log("No disguised characters.");
+					return;
+				}
+
+				const { i, slot } = disguisedCharacters[Math.floor(Math.random() * disguisedCharacters.length)];
+				console.log(`#${i+1} is a real ${slot.getData()?.identity}`);
+			}
+		},
+	});
 	lib.addCardDefinition("villager", {name: "empress"});
 
 	lib.addCardDefinition("minion", {name: "minion", evil: true, lying: true});
 
 	return lib;
 }
-
 
 export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 	async load(cardLib: CardLibrary): Promise<undefined> {
