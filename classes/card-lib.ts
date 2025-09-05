@@ -70,6 +70,17 @@ export class CardLibrary implements CardProducer {
 	toDeck(): Deck {
 		return new Deck(this);
 	}
+
+	extractAsDeck(cardNames: string[] | ((name: string) => boolean)): Deck {
+		let cards: string[];
+		if (typeof cardNames === "function") {
+			cards = this.getKeys().filter(cardNames);
+		} else {
+			cards = cardNames;
+		}
+
+		return new Deck(this, cards);
+	}
 }
 
 export class Deck implements CardProducer {
