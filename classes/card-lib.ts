@@ -135,6 +135,11 @@ export class Deck implements CardProducer {
 	getKeys(): string[] {
 	    return Array.from(this.cards);
 	}
+
+	join(deck: Deck) {
+		if (deck.cardLib !== this.cardLib) throw new Error("Incompatible deck sources");
+		this.cards = [...this.cards, ...deck.cards];
+	}
 }
 
 export interface SubdeckOptions {

@@ -1,5 +1,6 @@
 import { CardLibrary } from "./classes/card-lib.js";
 import { Game } from "./classes/game.js";
+import { MafiaRules } from "./classes/mafia.js";
 import { CardLoader, DebugRules, DefaultCardLoader, PairGameCardLoader, PairsMemoryGameRules, Rules, TraditionalDeckCardLoader } from "./classes/rules.js";
 
 window.onload = async () => {
@@ -54,6 +55,8 @@ function nameToRules(name: string): Rules {
 	switch (name) {
 		case "debug": 
 			return new DebugRules();
+		case "mafia": 
+			return new MafiaRules();
 		case "memory": 
 			return new PairsMemoryGameRules();
 		default:
