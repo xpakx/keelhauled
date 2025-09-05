@@ -215,7 +215,7 @@ export function getMafiaLibrary(): CardLibrary {
 				reportedDistance = Math.abs(minDistance);
 			}
 
-			console.log(`I'm ${minDistance} cards away from closest evil`);
+			console.log(`I'm ${reportedDistance} cards away from closest evil`);
 		}
 	});
 	lib.addCardDefinition("villager", {
