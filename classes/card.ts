@@ -130,6 +130,10 @@ export class CardSlot<T> {
 		return this.cardData;
 	}
 
+	setData(data: T | undefined): void {
+		this.cardData = data;
+	}
+
 	hasCard() {
 		return this.card !== undefined;
 	}
