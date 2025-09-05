@@ -340,22 +340,27 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 	async load(cardLib: CardLibrary): Promise<undefined> {
 		const cardImage = await Assets.loadImage("images/card.png");
 		const faceImage = await Assets.loadImage("images/empty.png");
+
+		const sprites = await Assets.loadImage("images/mafia/portraits.png");
+		const portraits = await Assets.splitGridImage(sprites, 3, 2);
+
 		cardLib.setDefaultReverse(cardImage);
 		cardLib.registerDefinition("empty", faceImage);
 
-		const villagers = ["hunter", "enlightened", "confessor", "medium", "empress"];
-		this.registerForType(villagers, "blue", faceImage, cardLib);
+		const villagers = ["hunter", "enlightened", "medium", "confessor", "empress"];
+		this.registerForType(villagers, faceImage, portraits, cardLib);
 
 		const minions = ["minion"];
-		this.registerForType(minions, "red", faceImage, cardLib);
+		this.registerForType(minions, faceImage, portraits, cardLib, "red");
 	}
 
-	registerForType(names: string[], color: string, emptyCard: HTMLImageElement, cardLib: CardLibrary) {
+	registerForType(names: string[], emptyCard: HTMLImageElement, portraits: HTMLImageElement[], cardLib: CardLibrary, color?: string) {
 		for (let name of names) {
 			const image = this.createCardImage(
 				emptyCard,
-				color,
+				portraits.shift()!,
 				name,
+				color,
 			);
 			cardLib.registerDefinition(name, image);
 		}
@@ -363,8 +368,9 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 
 	createCardImage(
 		emptyCard: HTMLImageElement,
-		color: string,
+		portrait: HTMLImageElement,
 		name: string,
+		color?: string,
 	): HTMLImageElement {
 		const canvas = new OffscreenCanvas(emptyCard.width, emptyCard.height);
 		canvas.width = emptyCard.width;
@@ -373,19 +379,18 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 		if (!ctx) throw new Error("No 2D context!");
 
 		ctx.drawImage(emptyCard, 0, 0, canvas.width, canvas.height);
+		if (color) {
+			ctx.fillStyle = color;
+			ctx.globalAlpha = 0.1;
+			ctx.globalCompositeOperation = "source-atop";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.globalAlpha = 1;
+			ctx.globalCompositeOperation = "source-over";
+		}
 
-		ctx.fillStyle = color;
-		const padding = 0.105 * canvas.width;
-		const radius = 0.12 * canvas.width;
-		ctx.beginPath();
-		ctx.roundRect(
-			padding, 
-			padding,
-			canvas.width - 2*padding,
-			canvas.height - 2*padding,
-			radius
-		);
-		ctx.fill();
+		const padding = 0.09 * canvas.width;
+
+		ctx.drawImage(portrait, padding, padding, canvas.width - 2*padding, canvas.height - 2*padding);
 
 		ctx.fillStyle = "#fff";
 		ctx.font = `${0.1 * canvas.height}px sans-serif`;
