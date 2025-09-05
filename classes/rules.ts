@@ -7,7 +7,8 @@ import { Game, Position, Size } from "./game.js";
 
 export interface Rules {
 	init(game: Game): void;
-	onCardClick(game: Game, slot: CardSlot<any>, coord?: Position): void;
+	onCardClick?(game: Game, slot: Card, coord?: Position): void;
+	onSlotClick?(game: Game, slot: CardSlot<any>, coord?: Position): void;
 	isGameOver(game: Game): boolean;
 	drawCard(): string | undefined;
 	getScore?(): number;
@@ -48,9 +49,7 @@ export class DebugRules implements Rules {
 		);
 	}
 
-	onCardClick(_game: Game, slot: CardSlot<any>, _coord?: Position): void {
-		const card = slot.getCard();
-		if (!card) return;
+	onCardClick(_game: Game, card: Card, _coord?: Position): void {
 		console.log(`Card ${card.name} clicked`);
 		card.revealCard();
 	}
@@ -106,10 +105,7 @@ export class PairsMemoryGameRules implements Rules {
 		);
 	}
 
-	onCardClick(game: Game, slot: CardSlot<any>, _coord?: Position): void {
-		const card = slot.getCard();
-		if (!card) return;
-
+	onCardClick(game: Game, card: Card, _coord?: Position): void {
 		if (this.locked || !card.safeToFlip()) return;
 
 		card.revealCard();

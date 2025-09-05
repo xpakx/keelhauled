@@ -91,9 +91,15 @@ export class Game {
 
 		for (let containerName of this.containers.keys()) {
 			const container = this.containers.get(containerName);
-			const card = container?.onMouseLeftClick(this.mouseCoord);
-			if (card) {
-				this.rules.onCardClick(this, card);
+			const slot = container?.onMouseLeftClick(this.mouseCoord);
+			if (slot) {
+				if (this.rules.onCardClick) {
+					const card = slot.getCard();
+					if (card) this.rules.onCardClick(this, card);
+				}
+				if (this.rules.onSlotClick) {
+					this.rules.onSlotClick(this, slot);
+				}
 				return;
 			}
 		}
