@@ -439,6 +439,20 @@ export function getMafiaLibrary(): CardLibrary {
 			console.log(`1 of ${picks.join(", ")} is evil`);
 		}
 	});
+	lib.addCardDefinition("villager", {
+		name: "judge",
+		skillToSelect: 1,
+		onSkill: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const isLying = card.getData()?.lying;
+			const target = cards[0];
+			const isTargetLying = target.getData()?.lying;
+			if (!isLying) {
+				console.log(`${target.getData()?.identity} is ${isTargetLying ? 'lying' : 'telling truth'}`);
+			} else {
+				console.log(`${target.getData()?.identity} is ${isTargetLying ? 'telling truth' : 'lying'}`);
+			}
+		}
+	});
 
 	lib.addCardDefinition("minion", {name: "minion", evil: true, lying: true});
 
@@ -458,6 +472,7 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 
 		const villagers = ["hunter", "enlightened", "medium", "confessor", "empress"];
 		this.registerForType(villagers, faceImage, portraits, cardLib);
+		// TODO: add judge
 
 		const minions = ["minion"];
 		this.registerForType(minions, faceImage, portraits, cardLib, "red");
