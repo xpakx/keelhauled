@@ -30,6 +30,7 @@ const dataFn: StartDataFn<CardData> = (name: string) => {
 
 export class MafiaRules implements Rules {
 	won: boolean = false;
+	cardsFlipped: number = 0;
 
     init(game: Game): void {
 	    const board = new Circle<CardData>(
@@ -73,9 +74,12 @@ export class MafiaRules implements Rules {
 					    data.lying = false;
 					    data.corruptible = false;
 				    }
+				    lib.on("onDisguise", slot, board.cards);
 			    }
 		    }
 	    }
+
+	    for (let slot of board.cards) lib.on("onDeal", slot, board.cards);
     }
 
     onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
@@ -94,6 +98,11 @@ export class MafiaRules implements Rules {
 		    card.flipCard();
 		    lib.on("onReveal", slot, board.cards);
 		    game.audio?.play("flip", {offset: 0.2});
+		    this.cardsFlipped += 1;
+		    if (this.cardsFlipped >= 4) {
+			    this.cardsFlipped = 0;
+			    for (let slot of board.cards) lib.on("onDayEnd", slot, board.cards); // TODO: real identity?
+		    }
 	    }
     }
 
@@ -104,7 +113,11 @@ export class MafiaRules implements Rules {
 	    if (!data) return;
 	    if (data.killed) return;
 	    const lib = game.cardLib as MafiaLib<ActorType>;
-	    
+	    const board = game.getContainer("board") as Circle<CardData> | undefined;
+	    if (!board) return;
+
+	    lib.on("onKill", slot, board.cards); // TODO: use real identity?
+
 	    if (data.realIdentity) {
 		    card = lib.getCard(data.realIdentity);
 		    if (!card) return;
@@ -121,9 +134,6 @@ export class MafiaRules implements Rules {
 	    } else {
 		    console.log(`Killed ${data.identity}.`);
 	    }
-
-	    const board = game.getContainer("board") as Circle<CardData> | undefined;
-	    if (!board) return;
 
 	    const toKill = MafiaHelper.getEvilCards(board.cards)
 		    .filter(c => !c.slot.getData()?.killed)
@@ -257,6 +267,7 @@ export class MafiaLib<T> extends CardLibrary {
 		if (!actor) return;
 		const skill = this.skills.get(actor);
 		if (!skill) return;
+		console.log(`Running hook ${hook} for ${actor}`);
 		if (skill[hook]) skill[hook](slot, slots);
 	}
 }
