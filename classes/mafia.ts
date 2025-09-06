@@ -6,7 +6,6 @@ import { Game, Position } from "./game.js";
 import { CardLoader, DefaultCardLoader, Rules } from "./rules.js";
 
 interface CardData {
-	usableSkill: boolean,
 	skillUsed: boolean,
 	lying: boolean,
 	evil: boolean,
@@ -14,11 +13,11 @@ interface CardData {
 	realIdentity?: string,
 	killed: boolean;
 	corruptible: boolean;
+	skillToSelect?: number;
 }
 
 const dataFn: StartDataFn<CardData> = (name: string) => {
 	return {
-		usableSkill: false,
 		skillUsed: false,
 		lying: false,
 		evil: false,
@@ -85,6 +84,7 @@ export class MafiaRules implements Rules {
 					data.identity =  newIdentity.name;
 					slot.putCard(newIdentity, "empty");
 					const dataDisguise = lib.generateData(newIdentity.name);
+					if (dataDisguise) data.skillToSelect = dataDisguise.skillToSelect;
 					if (dataDisguise && !dataDisguise.corruptible) {
 						data.lying = false;
 						data.corruptible = false;
@@ -109,7 +109,7 @@ export class MafiaRules implements Rules {
 
 			this.selection.selection.push(slot);
 			if (this.selection.selection.length >= this.selection.actorsToSelect) {
-				lib.on("onSkill", slot, this.selection.selection);
+				lib.on("onSkill", this.selection.slot, this.selection.selection);
 				const data = this.selection.slot.getData();
 				if (data) data.skillUsed = true;
 				this.selection = {active: false};
@@ -126,6 +126,17 @@ export class MafiaRules implements Rules {
 		}
 
 		if (card.flipped) {
+			const data = slot.getData();
+			if (data && data.skillToSelect && data.skillToSelect > 0 && !data.skillUsed) {
+				this.selection = {
+					active: true,
+					slot: slot,
+					actorsToSelect: data.skillToSelect,
+					selection: [],
+				};
+				return;
+			}
+			
 			// TODO: skill selection activation
 		} else {
 			const board = game.getContainer("board") as Circle<CardData> | undefined;
@@ -232,6 +243,7 @@ interface ActorDefinition {
 	onSkill?: SkillFn,
 	onDayEnd?: SkillFn,
 	onDisguise?: SkillFn,
+	skillToSelect?: number;
 }
 
 interface ActorData {
@@ -240,6 +252,7 @@ interface ActorData {
 	evil: boolean;
 	lying: boolean;
 	corruptible: boolean;
+	skillToSelect?: number;
 }
 
 export class MafiaLib<T> extends CardLibrary {
@@ -262,6 +275,7 @@ export class MafiaLib<T> extends CardLibrary {
 			evil: actor.evil ? true : false,
 			lying: actor.lying ? true : false,
 			corruptible: actor.corruptible === undefined ? true : actor.corruptible,
+			skillToSelect: actor.skillToSelect,
 		});
 
 		this.skills.set(actor.name, {
@@ -279,13 +293,13 @@ export class MafiaLib<T> extends CardLibrary {
 		if (!actorData) return;
 
 		return {
-			usableSkill: false,
 			skillUsed: false,
 			lying: actorData.lying,
 			evil: actorData.evil,
 			killed: false,
 			identity: name,
 			corruptible: actorData.corruptible,
+			skillToSelect: actorData.skillToSelect,
 		}
 	}
 
