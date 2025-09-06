@@ -13,6 +13,7 @@ interface CardData {
 	identity: string;
 	realIdentity?: string,
 	killed: boolean;
+	corruptible: boolean;
 }
 
 const dataFn: StartDataFn<CardData> = (name: string) => {
@@ -23,6 +24,7 @@ const dataFn: StartDataFn<CardData> = (name: string) => {
 		evil: false,
 		killed: false,
 		identity: name,
+		corruptible: true,
 	}
 };
 
@@ -53,6 +55,7 @@ export class MafiaRules implements Rules {
 	    board.setDataFunction(dataFn);
 	    board.setCards(subdeck.getCards());
 
+	    const deck = lib.getDeckOf("villager");
 	    for (let slot of board.cards) {
 		    const card = slot.getCard();
 		    if (!card) continue;
@@ -60,14 +63,16 @@ export class MafiaRules implements Rules {
 		    if (!data) continue;
 		    slot.setData(data);
 		    if (data.evil) {
-			    const deck = lib.getDeckOf("villager");
-			    deck.shuffle();
 			    data.realIdentity = card.name;
 			    const newIdentity = deck.getRandomCard();
 			    if (newIdentity) {
 				    data.identity =  newIdentity.name;
 				    slot.putCard(newIdentity, "empty");
-				    lib.on("onDisguise", slot, []);
+				    const dataDisguise = lib.generateData(newIdentity.name);
+				    if (dataDisguise && !dataDisguise.corruptible) {
+					    data.lying = false;
+					    data.corruptible = false;
+				    }
 			    }
 		    }
 	    }
@@ -77,6 +82,7 @@ export class MafiaRules implements Rules {
 	    const lib = game.cardLib as MafiaLib<ActorType>;
 	    const card = slot.getCard()
 	    if (!card) return;
+	    console.log(slot);
 
 	    if (card.flipped) {
 		    // TODO
@@ -173,6 +179,7 @@ interface ActorDefinition {
 	name: string,
 	evil?: boolean,
 	lying?: boolean,
+	corruptible?: boolean;
 	cardKey?: string,
 	onDeal?: SkillFn,
 	onReveal?: SkillFn,
@@ -187,6 +194,7 @@ interface ActorData {
 	cardKey: string;
 	evil: boolean;
 	lying: boolean;
+	corruptible: boolean;
 }
 
 export class MafiaLib<T> extends CardLibrary {
@@ -208,6 +216,7 @@ export class MafiaLib<T> extends CardLibrary {
 			cardKey: actor.cardKey ?? actor.name,
 			evil: actor.evil ? true : false,
 			lying: actor.lying ? true : false,
+			corruptible: actor.corruptible === undefined ? true : actor.corruptible,
 		});
 
 		this.skills.set(actor.name, {
@@ -231,6 +240,7 @@ export class MafiaLib<T> extends CardLibrary {
 			evil: actorData.evil,
 			killed: false,
 			identity: name,
+			corruptible: actorData.corruptible,
 		}
 	}
 
@@ -304,6 +314,7 @@ export function getMafiaLibrary(): CardLibrary {
 	});
 	lib.addCardDefinition("villager", {
 		name: "confessor",
+		corruptible: false,
 		onReveal: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
 			if (MafiaHelper.isEvil(card) || MafiaHelper.isCorrupted(card)) {
 				console.log("I'm dizzy");
@@ -311,11 +322,6 @@ export function getMafiaLibrary(): CardLibrary {
 				console.log("I'm good");
 			}
 		},
-		onDisguise: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
-			const data = card.getData();
-			if (!data) return;
-			data.lying = false;
-		}
 	});
 	lib.addCardDefinition("villager", {
 		name: "medium",
@@ -424,7 +430,7 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 		ctx.drawImage(emptyCard, 0, 0, canvas.width, canvas.height);
 		if (color) {
 			ctx.fillStyle = color;
-			ctx.globalAlpha = 0.1;
+			ctx.globalAlpha = 0.14;
 			ctx.globalCompositeOperation = "source-atop";
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 			ctx.globalAlpha = 1;
@@ -567,6 +573,13 @@ class MafiaHelper {
 	static getDisguisedIndices(cards: CardSlot<CardData>[]) {
 		return this.getDisguisedCards(cards)
 			.map(({ i }) => i);
+	}
+
+	static corrupt(card: CardSlot<CardData>) {
+		const data = card.getData();
+		if (!data) return;
+		if (!data.corruptible) return;
+		data.lying = true;
 	}
 }
 
