@@ -28,148 +28,183 @@ const dataFn: StartDataFn<CardData> = (name: string) => {
 	}
 };
 
+type SkillSelection = SkillSelectionSelected | SkillSelectionUnselected;
+
+interface SkillSelectionSelected {
+	active: true;
+	slot: CardSlot<CardData>;
+	actorsToSelect: number;
+	selection: CardSlot<CardData>[];
+}
+
+interface SkillSelectionUnselected {
+	active: false;
+}
+
 export class MafiaRules implements Rules {
 	won: boolean = false;
 	cardsFlipped: number = 0;
+	selection: SkillSelection = {active: false};
+	killSkill: boolean = false;
 
-    init(game: Game): void {
-	    const board = new Circle<CardData>(
-		    {x: 0, y: 0}, 
-		    {width: game.canvas.width, height: game.canvas.height},
-		    200,
-	    );
-	    game.registerContainer("board", board);
-	    this.startGame(game, board);
-    }
+	init(game: Game): void {
+		const board = new Circle<CardData>(
+			{x: 0, y: 0}, 
+			{width: game.canvas.width, height: game.canvas.height},
+			200,
+		);
+		game.registerContainer("board", board);
+		this.startGame(game, board);
+	}
 
-    startGame(game: Game, board: Circle<CardData>) {
-	    const lib = game.cardLib as MafiaLib<ActorType>;
-	    const deckVillagers: Deck = lib.getDeckOf("villager");
-	    const deckMinions: Deck = lib.getDeckOf("minion");
-	    deckVillagers.shuffle();
-	    deckMinions.shuffle();
+	startGame(game: Game, board: Circle<CardData>) {
+		const lib = game.cardLib as MafiaLib<ActorType>;
+		const deckVillagers: Deck = lib.getDeckOf("villager");
+		const deckMinions: Deck = lib.getDeckOf("minion");
+		deckVillagers.shuffle();
+		deckMinions.shuffle();
 
-	    const subdeck = deckVillagers.subdeck(5);
-	    subdeck.join(deckMinions.subdeck(1))
-	    subdeck.shuffle();
+		const subdeck = deckVillagers.subdeck(5);
+		subdeck.join(deckMinions.subdeck(1))
+		subdeck.shuffle();
 
-	    board.setDataFunction(dataFn);
-	    board.setCards(subdeck.getCards());
+		board.setDataFunction(dataFn);
+		board.setCards(subdeck.getCards());
 
-	    const deck = lib.getDeckOf("villager");
-	    for (let slot of board.cards) {
-		    const card = slot.getCard();
-		    if (!card) continue;
-		    const data = lib.generateData(card.name);
-		    if (!data) continue;
-		    slot.setData(data);
-		    if (data.evil) {
-			    data.realIdentity = card.name;
-			    const newIdentity = deck.getRandomCard();
-			    if (newIdentity) {
-				    data.identity =  newIdentity.name;
-				    slot.putCard(newIdentity, "empty");
-				    const dataDisguise = lib.generateData(newIdentity.name);
-				    if (dataDisguise && !dataDisguise.corruptible) {
-					    data.lying = false;
-					    data.corruptible = false;
-				    }
-				    lib.on("onDisguise", slot, board.cards);
-			    }
-		    }
-	    }
+		const deck = lib.getDeckOf("villager");
+		for (let slot of board.cards) {
+			const card = slot.getCard();
+			if (!card) continue;
+			const data = lib.generateData(card.name);
+			if (!data) continue;
+			slot.setData(data);
+			if (data.evil) {
+				data.realIdentity = card.name;
+				const newIdentity = deck.getRandomCard();
+				if (newIdentity) {
+					data.identity =  newIdentity.name;
+					slot.putCard(newIdentity, "empty");
+					const dataDisguise = lib.generateData(newIdentity.name);
+					if (dataDisguise && !dataDisguise.corruptible) {
+						data.lying = false;
+						data.corruptible = false;
+					}
+					lib.on("onDisguise", slot, board.cards);
+				}
+			}
+		}
 
-	    for (let slot of board.cards) lib.on("onDeal", slot, board.cards);
-    }
+		for (let slot of board.cards) lib.on("onDeal", slot, board.cards);
+	}
 
-    onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
-	    const lib = game.cardLib as MafiaLib<ActorType>;
-	    const card = slot.getCard()
-	    if (!card) return;
-	    console.log(slot);
+	onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
+		const lib = game.cardLib as MafiaLib<ActorType>;
+		const card = slot.getCard()
+		if (!card) return;
+		console.log(slot);
 
-	    if (card.flipped) {
-		    // TODO
-		    if (!slot.getData()?.killed) game.audio?.play("hit");
-		    this.kill(slot, game);
-	    } else {
-		    const board = game.getContainer("board") as Circle<CardData> | undefined;
-		    if (!board) return;
-		    card.flipCard();
-		    lib.on("onReveal", slot, board.cards);
-		    game.audio?.play("flip", {offset: 0.2});
-		    this.cardsFlipped += 1;
-		    if (this.cardsFlipped >= 4) {
-			    this.cardsFlipped = 0;
-			    for (let slot of board.cards) lib.on("onDayEnd", slot, board.cards); // TODO: real identity?
-		    }
-	    }
-    }
+		if (this.selection.active) {
+			if (slot === this.selection.slot) return;
+			if (this.selection.selection.indexOf(slot) >= 0) return;
 
-    kill(slot: CardSlot<CardData>, game: Game) {
-	    let card = slot.getCard()
-	    if (!card) return;
-	    const data = slot.getData();
-	    if (!data) return;
-	    if (data.killed) return;
-	    const lib = game.cardLib as MafiaLib<ActorType>;
-	    const board = game.getContainer("board") as Circle<CardData> | undefined;
-	    if (!board) return;
+			this.selection.selection.push(slot);
+			if (this.selection.selection.length >= this.selection.actorsToSelect) {
+				lib.on("onSkill", slot, this.selection.selection);
+				const data = this.selection.slot.getData();
+				if (data) data.skillUsed = true;
+				this.selection = {active: false};
+			}
+			return;
+		}
 
-	    lib.on("onKill", slot, board.cards); // TODO: use real identity?
+		// TODO: killSkill activation
+		if (this.killSkill) {
+			if (!slot.getData()?.killed) game.audio?.play("hit");
+			this.kill(slot, game);
+			this.killSkill = false;
+			return;
+		}
 
-	    if (data.realIdentity) {
-		    card = lib.getCard(data.realIdentity);
-		    if (!card) return;
-		    card.dealt = true;
-		    card.flipped = true;
-		    slot.putCard(card, "empty");
-		    data.identity = data.realIdentity;
-	    }
+		if (card.flipped) {
+			// TODO: skill selection activation
+		} else {
+			const board = game.getContainer("board") as Circle<CardData> | undefined;
+			if (!board) return;
+			card.flipCard();
+			lib.on("onReveal", slot, board.cards);
+			game.audio?.play("flip", {offset: 0.2});
+			this.cardsFlipped += 1;
+			if (this.cardsFlipped >= 4) {
+				this.cardsFlipped = 0;
+				for (let slot of board.cards) lib.on("onDayEnd", slot, board.cards); // TODO: real identity?
+			}
+		}
+	}
 
-	    data.killed = true;
+	kill(slot: CardSlot<CardData>, game: Game) {
+		let card = slot.getCard()
+		if (!card) return;
+		const data = slot.getData();
+		if (!data) return;
+		if (data.killed) return;
+		const lib = game.cardLib as MafiaLib<ActorType>;
+		const board = game.getContainer("board") as Circle<CardData> | undefined;
+		if (!board) return;
 
-	    if(data.evil) {
-		    console.log(`Killed evil ${data.identity}.`);
-	    } else {
-		    console.log(`Killed ${data.identity}.`);
-	    }
+		lib.on("onKill", slot, board.cards); // TODO: use real identity?
 
-	    const toKill = MafiaHelper.getEvilCards(board.cards)
-		    .filter(c => !c.slot.getData()?.killed)
-		    .length;
-	    if (toKill == 0) this.won = true;
-	
-    }
- 
-    isGameOver(_game: Game): boolean {
-	    return this.won;
-    }
+		if (data.realIdentity) {
+			card = lib.getCard(data.realIdentity);
+			if (!card) return;
+			card.dealt = true;
+			card.flipped = true;
+			slot.putCard(card, "empty");
+			data.identity = data.realIdentity;
+		}
 
-    onGameOver(game: Game): void {
-	    console.log("You won!");
-	    this.won = false;
+		data.killed = true;
 
-	    const grid = game.getContainer("board");
-	    if (!grid) return;
+		if(data.evil) {
+			console.log(`Killed evil ${data.identity}.`);
+		} else {
+			console.log(`Killed ${data.identity}.`);
+		}
 
-	    setTimeout(() => {
-		    grid.getCards().filter(c => c.flipped).forEach(c => c.flipCard());
-		    setTimeout(() => {
-			    const grid = game.getContainer("board") as Circle<CardData>;
-			    if (!grid) return;
-			    this.startGame(game, grid);
-			    grid.getCards().forEach(c => {
-				    c.animation = undefined;
-				    c.dealt = true
-			    });
-		    }, 500);
-	    }, 500);
-    }
+		const toKill = MafiaHelper.getEvilCards(board.cards)
+		.filter(c => !c.slot.getData()?.killed)
+		.length;
+		if (toKill == 0) this.won = true;
 
-    drawCard(): string | undefined {
-	   return undefined;
-    }
+	}
+
+	isGameOver(_game: Game): boolean {
+		return this.won;
+	}
+
+	onGameOver(game: Game): void {
+		console.log("You won!");
+		this.won = false;
+
+		const grid = game.getContainer("board");
+		if (!grid) return;
+
+		setTimeout(() => {
+			grid.getCards().filter(c => c.flipped).forEach(c => c.flipCard());
+			setTimeout(() => {
+				const grid = game.getContainer("board") as Circle<CardData>;
+				if (!grid) return;
+				this.startGame(game, grid);
+				grid.getCards().forEach(c => {
+					c.animation = undefined;
+					c.dealt = true
+				});
+			}, 500);
+		}, 500);
+	}
+
+	drawCard(): string | undefined {
+		return undefined;
+	}
 }
 
 export type SkillFn = (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => void;
