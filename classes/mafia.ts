@@ -667,7 +667,7 @@ interface Drawable<T> {
 interface CardInfoInterface {
 	number: NumberCounter;
 	hint?: Drawable<void>;
-	actionIndicator?: Drawable<void>;
+	actionIndicator?: ActionIndicator;
 }
 
 class NumberCounter implements Drawable<void> {
@@ -691,3 +691,34 @@ class NumberCounter implements Drawable<void> {
 		return this.position;
 	}
 }
+
+class ActionIndicator implements Drawable<void> {
+	position: Position;
+	slot: CardSlot<CardData>;
+
+	constructor(position: Position, slot: CardSlot<CardData>) {
+		this.position = position;
+		this.slot = slot;
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
+		const data = this.slot.getData();
+		if (!data) return;
+		if (data.skillUsed || !data.skillToSelect) return;
+
+		ctx.fillStyle = "blue";
+		ctx.arc(
+			this.position.x + (position?.x ?? 0),
+			this.position.y + (position?.y ?? 0),
+			10,
+			0,
+			2 * Math.PI
+		);
+		ctx.fill();
+	}
+
+	getPosition(): Position {
+		return this.position;
+	}
+}
+
