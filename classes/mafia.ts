@@ -231,20 +231,7 @@ interface ActorSkills {
 
 type Hook = keyof ActorSkills;
 
-interface ActorDefinition {
-	name: string,
-	evil?: boolean,
-	lying?: boolean,
-	corruptible?: boolean;
-	cardKey?: string,
-	onDeal?: SkillFn,
-	onReveal?: SkillFn,
-	onKill?: SkillFn,
-	onSkill?: SkillFn,
-	onDayEnd?: SkillFn,
-	onDisguise?: SkillFn,
-	skillToSelect?: number;
-}
+type ActorDefinition = Partial<Omit<ActorData, 'name'>> & Pick<ActorData, 'name'> & ActorSkills;
 
 interface ActorData {
 	name: string;
