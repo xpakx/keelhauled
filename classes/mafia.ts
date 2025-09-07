@@ -666,8 +666,8 @@ interface Drawable<T> {
 
 interface CardInfoInterface {
 	number: NumberCounter;
-	hint?: Drawable<void>;
-	actionIndicator?: ActionIndicator;
+	hint: HintIndicator;
+	actionIndicator: ActionIndicator;
 }
 
 class NumberCounter implements Drawable<void> {
@@ -722,3 +722,48 @@ class ActionIndicator implements Drawable<void> {
 	}
 }
 
+class HintIndicator implements Drawable<void> {
+	position: Position;
+	slot: CardSlot<CardData & {hint?: string}>;
+
+	constructor(position: Position, slot: CardSlot<CardData & {hint?: string}>) {
+		this.position = position;
+		this.slot = slot;
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
+		const data = this.slot.getData();
+		if (!data || !data.hint) return;
+
+		const x = this.position.x + (position?.x ?? 0);
+		const y = this.position.y + (position?.y ?? 0);
+
+		ctx.font = "14px sans-serif";
+		ctx.textBaseline = "top";
+		const padding = 6;
+		const text = data.hint;
+
+		const textMetrics = ctx.measureText(text);
+		const textWidth = textMetrics.width;
+		const textHeight = 16;
+
+		const boxWidth = textWidth + padding * 2;
+		const boxHeight = textHeight + padding * 2;
+
+		ctx.beginPath();
+		ctx.roundRect(x, y, boxWidth, boxHeight, 6);
+		ctx.fillStyle = "black";
+		ctx.fill();
+
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = "rgba(100,150,255,0.9)";
+		ctx.stroke();
+
+		ctx.fillStyle = "white";
+		ctx.fillText(text, x + padding, y + padding);
+	}
+
+	getPosition(): Position {
+		return this.position;
+	}
+}
