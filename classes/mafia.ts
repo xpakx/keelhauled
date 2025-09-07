@@ -253,7 +253,7 @@ export class MafiaLib<T> extends CardLibrary {
 			actors = [];
 			this.actorsByType.set(type, actors);
 		}
-		if (actor.name in actors) return;
+		if (actors.includes(actor.name)) return;
 		actors.push(actor.name);
 
 		this.actorData.set(actor.name, {
