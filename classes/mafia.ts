@@ -45,6 +45,7 @@ export class MafiaRules implements Rules {
 	cardsFlipped: number = 0;
 	selection: SkillSelection = {active: false};
 	killSkill: boolean = false;
+	interface: CardInfoInterface[] = [];
 
 	init(game: Game): void {
 		const board = new Circle<CardData>(
@@ -459,7 +460,10 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 
 		const villagers = ["hunter", "enlightened", "medium", "confessor", "empress"];
 		this.registerForType(villagers, faceImage, portraits, cardLib);
+
 		// TODO: add judge
+		const portraits2 = await Assets.splitGridImage(sprites, 3, 2);
+		this.registerForType(['judge'], faceImage, portraits2, cardLib);
 
 		const minions = ["minion"];
 		this.registerForType(minions, faceImage, portraits, cardLib, "red");
@@ -645,3 +649,23 @@ class MafiaHelper {
 	}
 }
 
+interface Action<T> {
+	name: string;
+	data: T;
+}
+
+interface Drawable<T> {
+	tick?(timestamp: number): void;
+	draw(ctx: CanvasRenderingContext2D, position?: Position): void;
+	getPosition(): Position;
+
+	onMouseMove(position: Position): void;
+	onMouseLeftClick(position: Position): Action<T>;
+	onMouseLeftClickRelease(position: Position): Action<T>;
+}
+
+interface CardInfoInterface {
+	number: Drawable<void>;
+	hint?: Drawable<void>;
+	actionIndicator?: Drawable<void>;
+}
