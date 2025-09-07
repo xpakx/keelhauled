@@ -659,13 +659,35 @@ interface Drawable<T> {
 	draw(ctx: CanvasRenderingContext2D, position?: Position): void;
 	getPosition(): Position;
 
-	onMouseMove(position: Position): void;
-	onMouseLeftClick(position: Position): Action<T>;
-	onMouseLeftClickRelease(position: Position): Action<T>;
+	onMouseMove?(position: Position): void;
+	onMouseLeftClick?(position: Position): Action<T>;
+	onMouseLeftClickRelease?(position: Position): Action<T>;
 }
 
 interface CardInfoInterface {
-	number: Drawable<void>;
+	number: NumberCounter;
 	hint?: Drawable<void>;
 	actionIndicator?: Drawable<void>;
+}
+
+class NumberCounter implements Drawable<void> {
+	position: Position;
+	num: number;
+
+	constructor(position: Position, num: number) {
+		this.position = position;
+		this.num = num;
+	}
+
+	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
+		ctx.fillStyle = "#fff";
+		ctx.font = `21px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "bottom";
+		ctx.fillText(`#${this.num}`, this.position.x + (position?.x ?? 0), this.position.y + (position?.y ?? 0));
+	}
+
+	getPosition(): Position {
+		return this.position;
+	}
 }
