@@ -675,9 +675,13 @@ class MafiaHelper {
 
 class ActionIndicator implements Drawable<void, CardData> {
 	position: Position;
+	radius = 10;
 
 	constructor(position: Position) {
 		this.position = position;
+		const cardWidth = 100;
+		this.position.x += cardWidth - this.radius - 13;
+		this.position.y += this.radius + 10;
 	}
 
 	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
@@ -691,9 +695,9 @@ class ActionIndicator implements Drawable<void, CardData> {
 		ctx.fillStyle = "blue";
 		ctx.beginPath();
 		ctx.arc(
-			slot.coord.x + (position?.x ?? 0),
-			slot.coord.y + (position?.y ?? 0),
-			10,
+			slot.coord.x + (position?.x ?? 0) + this.position.x + card.drawDelta.x,
+			slot.coord.y + (position?.y ?? 0) + this.position.y + card.drawDelta.y,
+			this.radius,
 			0,
 			2 * Math.PI
 		);
@@ -716,8 +720,8 @@ class HintIndicator implements Drawable<void, CardData> {
 		const data = slot.getData();
 		if (!data || !data.hint) return;
 
-		const x = slot.coord.x + (position?.x ?? 0);
-		const y = slot.coord.y + (position?.y ?? 0);
+		let x = slot.coord.x + (position?.x ?? 0);
+		const y = slot.coord.y + (position?.y ?? 0) + 100; // TODO: 100 is a card height
 
 		ctx.font = "14px sans-serif";
 		ctx.textBaseline = "top";
@@ -731,6 +735,7 @@ class HintIndicator implements Drawable<void, CardData> {
 
 		const boxWidth = textWidth + padding * 2;
 		const boxHeight = textHeight + padding * 2;
+		x += 50 - textWidth/2 - padding; // TODO: 50 is half of a card height
 
 		ctx.beginPath();
 		ctx.roundRect(x, y, boxWidth, boxHeight, 6);
