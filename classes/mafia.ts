@@ -56,6 +56,7 @@ export class MafiaRules implements Rules {
 		);
 		game.registerContainer("board", board);
 		this.startGame(game, board);
+		this.addDrawables(board);
 	}
 
 	startGame(game: Game, board: Circle<CardData>) {
@@ -217,6 +218,14 @@ export class MafiaRules implements Rules {
 
 	drawCard(): string | undefined {
 		return undefined;
+	}
+
+	addDrawables(board: Circle<CardData>) {
+		board.cards.forEach((slot, i) => {
+			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i));
+			slot.addDrawable(new ActionIndicator({x: 0, y: 0}));
+			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
+		});
 	}
 }
 
@@ -665,12 +674,12 @@ class NumberCounter implements Drawable<void, CardData> {
 		this.num = num;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, _slot: CardSlot<CardData>, position?: Position): void {
+	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
 		ctx.fillStyle = "#fff";
 		ctx.font = `21px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "bottom";
-		ctx.fillText(`#${this.num}`, this.position.x + (position?.x ?? 0), this.position.y + (position?.y ?? 0));
+		ctx.fillText(`#${this.num}`, slot.coord.x + (position?.x ?? 0), slot.coord.y + (position?.y ?? 0));
 	}
 
 	getPosition(): Position {
@@ -692,8 +701,8 @@ class ActionIndicator implements Drawable<void, CardData> {
 
 		ctx.fillStyle = "blue";
 		ctx.arc(
-			this.position.x + (position?.x ?? 0),
-			this.position.y + (position?.y ?? 0),
+			slot.coord.x + (position?.x ?? 0),
+			slot.coord.y + (position?.y ?? 0),
 			10,
 			0,
 			2 * Math.PI
@@ -717,8 +726,8 @@ class HintIndicator implements Drawable<void, CardData & {hint: string}> {
 		const data = slot.getData();
 		if (!data || !data.hint) return;
 
-		const x = this.position.x + (position?.x ?? 0);
-		const y = this.position.y + (position?.y ?? 0);
+		const x = slot.coord.x + (position?.x ?? 0);
+		const y = slot.coord.y + (position?.y ?? 0);
 
 		ctx.font = "14px sans-serif";
 		ctx.textBaseline = "top";

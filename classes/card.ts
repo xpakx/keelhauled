@@ -1,4 +1,5 @@
 import { Animation, DealingAnimation, FlippingAnimation, ShakingAnimation } from "./animation.js";
+import { Drawable } from "./drawable.js";
 import { Position, Size } from "./game.js";
 
 export class Card {
@@ -107,6 +108,7 @@ export class CardSlot<T> {
 	zIndex: number = 0;
 	angle: number = 0;
 	initFn?: StartDataFn<T>;
+	drawables: Drawable<unknown, T>[] = [];
 
 	constructor(coord: Position, zIndex: number = 0, angle: number = 0) {
 		this.coord = coord;
@@ -120,10 +122,16 @@ export class CardSlot<T> {
 
 	tick(timestamp: number, hovered: boolean): void {
 		this.card?.tick(timestamp, hovered);
+		for (let drawable of this.drawables) {
+			if (drawable && drawable.tick) drawable.tick(timestamp);
+		}
 	}
 
 	draw(ctx: CanvasRenderingContext2D, position: Position) {
 		this.card?.draw(ctx, position);
+		for (let drawable of this.drawables) {
+			drawable.draw(ctx, this);
+		}
 	}
 
 	getData(): T | undefined {
@@ -156,5 +164,13 @@ export class CardSlot<T> {
 		} else if (cardData !== "empty") {
 			this.cardData = cardData;
 		}
+	}
+
+	addDrawable(drawable: Drawable<unknown, T>) {
+		this.drawables.push(drawable);
+	}
+
+	cleanDrawables() {
+		this.drawables = [];
 	}
 }
