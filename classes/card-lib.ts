@@ -29,6 +29,10 @@ export class CardLibrary implements CardProducer {
 		this.defaultCardSize = size;
 	}
 
+	getDefaultSize(): Size {
+		return this.defaultCardSize;
+	}
+
 	registerDefinition(name: string, face?: HTMLImageElement, back?: HTMLImageElement) {
 		const def = {
 			face: face,

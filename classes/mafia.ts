@@ -57,7 +57,7 @@ export class MafiaRules implements Rules {
 		);
 		game.registerContainer("board", board);
 		this.startGame(game, board);
-		this.addDrawables(board);
+		this.addDrawables(game, board);
 	}
 
 	startGame(game: Game, board: Circle<CardData>) {
@@ -221,9 +221,9 @@ export class MafiaRules implements Rules {
 		return undefined;
 	}
 
-	addDrawables(board: Circle<CardData>) {
+	addDrawables(game: Game, board: Circle<CardData>) {
 		board.cards.forEach((slot, i) => {
-			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i+1));
+			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i+1, game.cardLib.getDefaultSize().width));
 			slot.addDrawable(new ActionIndicator({x: 0, y: 0}));
 			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
 		});
@@ -683,9 +683,11 @@ interface CardInfoInterface {
 class NumberCounter implements Drawable<void, CardData> {
 	position: Position;
 	num: number;
+	cardWidth: number;
 
-	constructor(position: Position, num: number) {
+	constructor(position: Position, num: number, cardWidth: number) {
 		this.position = position;
+		this.cardWidth = cardWidth;
 		this.num = num;
 	}
 
@@ -694,7 +696,14 @@ class NumberCounter implements Drawable<void, CardData> {
 		ctx.font = `21px sans-serif`;
 		ctx.textAlign = "left";
 		ctx.textBaseline = "bottom";
-		ctx.fillText(`#${this.num}`, slot.coord.x + (position?.x ?? 0), slot.coord.y + (position?.y ?? 0));
+		const text = `#${this.num}`;
+		const textMetrics = ctx.measureText(text);
+		const centerX = slot.coord.x + this.cardWidth / 2 - textMetrics.width / 2;
+		ctx.fillText(
+			text,
+			centerX + (position?.x ?? 0),
+			slot.coord.y + (position?.y ?? 0)
+		);
 	}
 
 	getPosition(): Position {
@@ -716,7 +725,9 @@ class ActionIndicator implements Drawable<void, CardData> {
 		if (!card) return;
 		if (data.skillUsed || !data.skillToSelect || !card.flipped) return;
 
+
 		ctx.fillStyle = "blue";
+		ctx.beginPath();
 		ctx.arc(
 			slot.coord.x + (position?.x ?? 0),
 			slot.coord.y + (position?.y ?? 0),
