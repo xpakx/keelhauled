@@ -15,6 +15,7 @@ interface CardData {
 	killed: boolean;
 	corruptible: boolean;
 	skillToSelect?: number;
+	hint?: string;
 }
 
 const dataFn: StartDataFn<CardData> = (name: string) => {
@@ -222,7 +223,7 @@ export class MafiaRules implements Rules {
 
 	addDrawables(board: Circle<CardData>) {
 		board.cards.forEach((slot, i) => {
-			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i));
+			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i+1));
 			slot.addDrawable(new ActionIndicator({x: 0, y: 0}));
 			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
 		});
@@ -251,6 +252,7 @@ interface ActorData {
 	lying: boolean;
 	corruptible: boolean;
 	skillToSelect?: number;
+	hint?: string;
 }
 
 export class MafiaLib<T> extends CardLibrary {
@@ -328,6 +330,9 @@ export function getMafiaLibrary(): CardLibrary {
 	lib.addCardDefinition("villager", {
 		name: "hunter",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+
 			const hunterIndex = cards.indexOf(card);
 
 			const evilIndices = MafiaHelper.getEvilIndices(cards);
@@ -339,7 +344,7 @@ export function getMafiaLibrary(): CardLibrary {
 
 			const distance = MafiaHelper.closestDistance(hunterIndex, evilIndices, cards.length);
 
-			const isLying = card.getData()?.lying;
+			const isLying = data.lying;
 
 			let reportedDistance;
 			if (isLying) {
@@ -348,12 +353,15 @@ export function getMafiaLibrary(): CardLibrary {
 				reportedDistance = distance;
 			}
 
-			console.log(`I'm ${reportedDistance} cards away from closest evil`);
+			data.hint = `I'm ${reportedDistance} cards away from closest evil`;
 		}
 	});
 	lib.addCardDefinition("villager", {
 		name: "enlightened",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+
 			const enlightenedIndex = cards.indexOf(card);
 			const total = cards.length;
 
@@ -367,26 +375,30 @@ export function getMafiaLibrary(): CardLibrary {
 			let direction = MafiaHelper.closestDirection(enlightenedIndex, evilIndices, total);
 			if (card.getData()?.lying) direction = MafiaHelper.getRandomDirection(direction);
 
-			console.log(`Closest evil is ${direction}`);
+			data.hint = `Closest evil is ${direction}`;
 		}
 	});
 	lib.addCardDefinition("villager", {
 		name: "confessor",
 		corruptible: false,
 		onReveal: (card: CardSlot<CardData>, _cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+
 			if (MafiaHelper.isEvil(card) || MafiaHelper.isCorrupted(card)) {
-				console.log("I'm dizzy");
+				data.hint = "I'm dizzy";
 			} else {
-				console.log("I'm good");
+				data.hint = "I'm good";
 			}
 		},
 	});
 	lib.addCardDefinition("villager", {
 		name: "medium",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
-			const isLying = card.getData()?.lying;
-			
-			if (!isLying) {
+			const data = card.getData();
+			if (!data) return;
+
+			if (!data.lying) {
 				const goodCharacters = MafiaHelper.getGoodCards(cards);
 
 				if (goodCharacters.length === 0) {
@@ -396,7 +408,7 @@ export function getMafiaLibrary(): CardLibrary {
 
 				const { i, slot } = goodCharacters[Math.floor(Math.random() * goodCharacters.length)];
 
-				console.log(`#${i+1} is a real ${slot.getData()?.realIdentity ?? slot.getData()?.identity}`);
+				data.hint = `#${i+1} is a real ${slot.getData()?.realIdentity ?? slot.getData()?.identity}`;
 			} else {
 				const disguisedCharacters = MafiaHelper.getDisguisedCards(cards);
 				if (disguisedCharacters.length === 0) {
@@ -405,20 +417,21 @@ export function getMafiaLibrary(): CardLibrary {
 				}
 
 				const { i, slot } = disguisedCharacters[Math.floor(Math.random() * disguisedCharacters.length)];
-				console.log(`#${i+1} is a real ${slot.getData()?.identity}`);
+				data.hint = `#${i+1} is a real ${slot.getData()?.identity}`;
 			}
 		},
 	});
 	lib.addCardDefinition("villager", {
 		name: "empress",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
+			const data = card.getData();
+			if (!data) return;
+
 			const evilSlots = MafiaHelper.getEvilIndices(cards);
 			const goodSlots = MafiaHelper.getGoodIndices(cards);
 
-			const isLying = card.getData()?.lying;
-
 			let picks;
-			if (!isLying) {
+			if (!data.lying) {
 				if (evilSlots.length === 0 || goodSlots.length < 2) {
 					console.log("Empress cannot deliver her prophecy.");
 					return;
@@ -434,20 +447,22 @@ export function getMafiaLibrary(): CardLibrary {
 			}
 
 			picks = picks.sort(() => Math.random() - 0.5).map(i => i+1);
-			console.log(`1 of ${picks.join(", ")} is evil`);
+			data.hint = `1 of ${picks.join(", ")} is evil`;
 		}
 	});
 	lib.addCardDefinition("villager", {
 		name: "judge",
 		skillToSelect: 1,
 		onSkill: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
-			const isLying = card.getData()?.lying;
+			const data = card.getData();
+			if (!data) return;
+
 			const target = cards[0];
 			const isTargetLying = target.getData()?.lying;
-			if (!isLying) {
-				console.log(`${target.getData()?.identity} is ${isTargetLying ? 'lying' : 'telling truth'}`);
+			if (!data.lying) {
+				data.hint = `${target.getData()?.identity} is ${isTargetLying ? 'lying' : 'telling truth'}`;
 			} else {
-				console.log(`${target.getData()?.identity} is ${isTargetLying ? 'telling truth' : 'lying'}`);
+				data.hint = `${target.getData()?.identity} is ${isTargetLying ? 'telling truth' : 'lying'}`;
 			}
 		}
 	});
@@ -677,7 +692,7 @@ class NumberCounter implements Drawable<void, CardData> {
 	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
 		ctx.fillStyle = "#fff";
 		ctx.font = `21px sans-serif`;
-		ctx.textAlign = "center";
+		ctx.textAlign = "left";
 		ctx.textBaseline = "bottom";
 		ctx.fillText(`#${this.num}`, slot.coord.x + (position?.x ?? 0), slot.coord.y + (position?.y ?? 0));
 	}
@@ -697,7 +712,9 @@ class ActionIndicator implements Drawable<void, CardData> {
 	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
 		const data = slot.getData();
 		if (!data) return;
-		if (data.skillUsed || !data.skillToSelect) return;
+		const card = slot.getCard();
+		if (!card) return;
+		if (data.skillUsed || !data.skillToSelect || !card.flipped) return;
 
 		ctx.fillStyle = "blue";
 		ctx.arc(
@@ -715,14 +732,14 @@ class ActionIndicator implements Drawable<void, CardData> {
 	}
 }
 
-class HintIndicator implements Drawable<void, CardData & {hint: string}> {
+class HintIndicator implements Drawable<void, CardData> {
 	position: Position;
 
 	constructor(position: Position) {
 		this.position = position;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData & {hint: string}>, position?: Position): void {
+	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
 		const data = slot.getData();
 		if (!data || !data.hint) return;
 
@@ -731,6 +748,7 @@ class HintIndicator implements Drawable<void, CardData & {hint: string}> {
 
 		ctx.font = "14px sans-serif";
 		ctx.textBaseline = "top";
+		ctx.textAlign = "left";
 		const padding = 6;
 		const text = data.hint;
 
