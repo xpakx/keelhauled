@@ -4,6 +4,7 @@ import { CardSlot, StartDataFn } from "./card.js";
 import { Circle } from "./containers/circle.js";
 import { Game, Position } from "./game.js";
 import { CardLoader, DefaultCardLoader, Rules } from "./rules.js";
+import { Drawable } from "./drawable.js";
 
 interface CardData {
 	skillUsed: boolean,
@@ -649,28 +650,13 @@ class MafiaHelper {
 	}
 }
 
-interface Action<T> {
-	name: string;
-	data: T;
-}
-
-interface Drawable<T> {
-	tick?(timestamp: number): void;
-	draw(ctx: CanvasRenderingContext2D, position?: Position): void;
-	getPosition(): Position;
-
-	onMouseMove?(position: Position): void;
-	onMouseLeftClick?(position: Position): Action<T>;
-	onMouseLeftClickRelease?(position: Position): Action<T>;
-}
-
 interface CardInfoInterface {
 	number: NumberCounter;
 	hint: HintIndicator;
 	actionIndicator: ActionIndicator;
 }
 
-class NumberCounter implements Drawable<void> {
+class NumberCounter implements Drawable<void, CardData> {
 	position: Position;
 	num: number;
 
@@ -679,7 +665,7 @@ class NumberCounter implements Drawable<void> {
 		this.num = num;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
+	draw(ctx: CanvasRenderingContext2D, _slot: CardSlot<CardData>, position?: Position): void {
 		ctx.fillStyle = "#fff";
 		ctx.font = `21px sans-serif`;
 		ctx.textAlign = "center";
@@ -692,17 +678,15 @@ class NumberCounter implements Drawable<void> {
 	}
 }
 
-class ActionIndicator implements Drawable<void> {
+class ActionIndicator implements Drawable<void, CardData> {
 	position: Position;
-	slot: CardSlot<CardData>;
 
-	constructor(position: Position, slot: CardSlot<CardData>) {
+	constructor(position: Position) {
 		this.position = position;
-		this.slot = slot;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
-		const data = this.slot.getData();
+	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
+		const data = slot.getData();
 		if (!data) return;
 		if (data.skillUsed || !data.skillToSelect) return;
 
@@ -722,17 +706,15 @@ class ActionIndicator implements Drawable<void> {
 	}
 }
 
-class HintIndicator implements Drawable<void> {
+class HintIndicator implements Drawable<void, CardData & {hint: string}> {
 	position: Position;
-	slot: CardSlot<CardData & {hint?: string}>;
 
-	constructor(position: Position, slot: CardSlot<CardData & {hint?: string}>) {
+	constructor(position: Position) {
 		this.position = position;
-		this.slot = slot;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, position?: Position): void {
-		const data = this.slot.getData();
+	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData & {hint: string}>, position?: Position): void {
+		const data = slot.getData();
 		if (!data || !data.hint) return;
 
 		const x = this.position.x + (position?.x ?? 0);
