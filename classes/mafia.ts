@@ -4,7 +4,7 @@ import { CardSlot, StartDataFn } from "./card.js";
 import { Circle } from "./containers/circle.js";
 import { Game, Position } from "./game.js";
 import { CardLoader, DefaultCardLoader, Rules } from "./rules.js";
-import { Drawable } from "./drawable.js";
+import { Drawable, TextLabel } from "./drawable.js";
 
 interface CardData {
 	skillUsed: boolean,
@@ -47,7 +47,6 @@ export class MafiaRules implements Rules {
 	cardsFlipped: number = 0;
 	selection: SkillSelection = {active: false};
 	killSkill: boolean = false;
-	interface: CardInfoInterface[] = [];
 
 	init(game: Game): void {
 		const board = new Circle<CardData>(
@@ -223,7 +222,7 @@ export class MafiaRules implements Rules {
 
 	addDrawables(game: Game, board: Circle<CardData>) {
 		board.cards.forEach((slot, i) => {
-			slot.addDrawable(new NumberCounter({x: 0, y: 0}, i+1, game.cardLib.getDefaultSize().width));
+			slot.addDrawable(new TextLabel({x: 0, y: 0}, `#${i+1}`, game.cardLib.getDefaultSize(), game.context));
 			slot.addDrawable(new ActionIndicator({x: 0, y: 0}));
 			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
 		});
@@ -671,43 +670,6 @@ class MafiaHelper {
 		if (!data) return;
 		if (!data.corruptible) return;
 		data.lying = true;
-	}
-}
-
-interface CardInfoInterface {
-	number: NumberCounter;
-	hint: HintIndicator;
-	actionIndicator: ActionIndicator;
-}
-
-class NumberCounter implements Drawable<void, CardData> {
-	position: Position;
-	num: number;
-	cardWidth: number;
-
-	constructor(position: Position, num: number, cardWidth: number) {
-		this.position = position;
-		this.cardWidth = cardWidth;
-		this.num = num;
-	}
-
-	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
-		ctx.fillStyle = "#fff";
-		ctx.font = `21px sans-serif`;
-		ctx.textAlign = "left";
-		ctx.textBaseline = "bottom";
-		const text = `#${this.num}`;
-		const textMetrics = ctx.measureText(text);
-		const centerX = slot.coord.x + this.cardWidth / 2 - textMetrics.width / 2;
-		ctx.fillText(
-			text,
-			centerX + (position?.x ?? 0),
-			slot.coord.y + (position?.y ?? 0)
-		);
-	}
-
-	getPosition(): Position {
-		return this.position;
 	}
 }
 
