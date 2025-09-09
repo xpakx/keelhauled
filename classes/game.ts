@@ -1,6 +1,7 @@
 import { AudioController } from "./audio.js";
 import { CardLibrary } from "./card-lib.js";
 import { CardContainer } from "./containers/card-container.js";
+import { InterfaceDrawable } from "./drawable.js";
 import { Hand } from "./hand.js";
 import { Rules } from "./rules.js";
 
@@ -29,6 +30,8 @@ export class Game {
 
 	containers: Map<string, CardContainer<any>> = new Map();
 	audio?: AudioController;
+
+	drawables: InterfaceDrawable<unknown>[] = [];
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -72,6 +75,11 @@ export class Game {
 			this.rules.onGameOver?.(this)
 			console.log("Game Over!", this.rules.getState?.());
 		}
+
+		for (let drawable of this.drawables) {
+			if (drawable && drawable.tick) drawable.tick(timestamp);
+			drawable.draw(this.context);
+		}
 	}
 
 	setCanvasSize(size: Size) {
@@ -87,6 +95,9 @@ export class Game {
 		for (let containerName of this.containers.keys()) {
 			const container = this.containers.get(containerName);
 			container?.onMouseMove(this.mouseCoord);
+		}
+		for (let drawable of this.drawables) {
+			if (drawable.onMouseMove) drawable.onMouseMove(this.mouseCoord);
 		}
 	}
 
@@ -110,6 +121,16 @@ export class Game {
 			}
 		}
 		this.hand.onMouseLeftClick(this.mouseCoord);
+
+		if (this.rules.onInterfaceClick) {
+			for (let drawable of this.drawables) {
+				if (drawable.onMouseLeftClick) {
+					const action = drawable.onMouseLeftClick(this.mouseCoord);
+					if (action) this.rules.onInterfaceClick(this, action, this.mouseCoord)
+
+				}
+			}
+		}
 	}
 
 	onMouseLeftClickRelease(event: MouseEvent) {
@@ -134,6 +155,14 @@ export class Game {
 
 	getContainer<T>(name: string): CardContainer<T> | undefined {
 		return this.containers.get(name);
+	}
+
+	addDrawable(drawable: InterfaceDrawable<unknown>) {
+		this.drawables.push(drawable);
+	}
+
+	cleanDrawables() {
+		this.drawables = [];
 	}
 }
 

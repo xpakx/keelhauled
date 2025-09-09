@@ -3,6 +3,7 @@ import { CardLibrary, Deck } from "./card-lib.js";
 import { Card, CardSlot } from "./card.js";
 import { Fan } from "./containers/fan.js";
 import { Grid } from "./containers/grid.js";
+import { Action } from "./drawable.js";
 import { Game, Position, Size } from "./game.js";
 
 export interface Rules {
@@ -14,6 +15,7 @@ export interface Rules {
 	getScore?(): number;
 	getState?(): string;
 	onGameOver?(game: Game): void;
+	onInterfaceClick?(game: Game, action: Action<any>, coord?: Position): void;
 }
 
 export interface CardLoader {
