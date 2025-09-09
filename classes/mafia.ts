@@ -4,7 +4,7 @@ import { CardSlot, StartDataFn } from "./card.js";
 import { Circle } from "./containers/circle.js";
 import { Game, Position } from "./game.js";
 import { CardLoader, DefaultCardLoader, Rules } from "./rules.js";
-import { Drawable, TextLabel } from "./drawable.js";
+import { Action, Button, Drawable, TextLabel } from "./drawable.js";
 
 interface CardData {
 	skillUsed: boolean,
@@ -226,6 +226,15 @@ export class MafiaRules implements Rules {
 			slot.addDrawable(new ActionIndicator({x: 0, y: 0}));
 			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
 		});
+
+		game.addDrawable(new Button<undefined>({x: 0, y: 0}, {name: "killButton", data: undefined}, {width: 50, height: 50}));
+	}
+
+	onInterfaceClick(_game: Game, action: Action<unknown>, _coord?: Position): void {
+		if (action.name === "killButton") {
+			this.killSkill = !this.killSkill;
+		}
+	    
 	}
 }
 
