@@ -24,12 +24,13 @@ export class Circle<T> implements CardContainer<T> {
 	}
 
 	setCards(cards: Card[]) {
-		this.cards = cards.map(c => {
-			const slot = new CardSlot<T>({x: 0, y: 0}, 0);
+		const newCards = cards.map((c, i) => {
+			const slot = (i < this.cards.length) ? this.cards[i] : new CardSlot<T>({x: 0, y: 0}, 0);
 			if (this.initFn) slot.setInitFunction(this.initFn);
 			slot.putCard(c);
 			return slot;
 		});
+		this.cards = newCards;
 		this.positionCards();
 	}
 
