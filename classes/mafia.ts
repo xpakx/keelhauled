@@ -47,6 +47,7 @@ export class MafiaRules implements Rules {
 	cardsFlipped: number = 0;
 	selection: SkillSelection = {active: false};
 	killSkill: boolean = false;
+	locked: boolean = false;
 
 	init(game: Game): void {
 		const board = new Circle<CardData>(
@@ -101,6 +102,7 @@ export class MafiaRules implements Rules {
 	}
 
 	onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
+		if (this.locked) return;
 		const lib = game.cardLib as MafiaLib<ActorType>;
 		const card = slot.getCard()
 		if (!card) return;
@@ -120,7 +122,6 @@ export class MafiaRules implements Rules {
 			return;
 		}
 
-		// TODO: killSkill activation
 		if (this.killSkill) {
 			if (!slot.getData()?.killed) game.audio?.play("hit");
 			this.kill(slot, game);
@@ -140,8 +141,8 @@ export class MafiaRules implements Rules {
 				return;
 			}
 			
-			// TODO: skill selection activation
 		} else {
+			if (!card.safeToFlip()) return;
 			const board = game.getContainer("board") as Circle<CardData> | undefined;
 			if (!board) return;
 			card.flipCard();
@@ -173,7 +174,6 @@ export class MafiaRules implements Rules {
 			card.dealt = true;
 			card.flipped = true;
 			slot.putCard(card, "empty");
-			data.identity = data.realIdentity;
 		}
 
 		data.killed = true;
@@ -202,6 +202,7 @@ export class MafiaRules implements Rules {
 		const grid = game.getContainer("board");
 		if (!grid) return;
 
+		this.locked = true;
 		setTimeout(() => {
 			grid.getCards().filter(c => c.flipped).forEach(c => c.flipCard());
 			setTimeout(() => {
@@ -212,6 +213,7 @@ export class MafiaRules implements Rules {
 					c.animation = undefined;
 					c.dealt = true
 				});
+				this.locked = false;
 			}, 500);
 		}, 500);
 	}
@@ -227,7 +229,13 @@ export class MafiaRules implements Rules {
 			slot.addDrawable(new HintIndicator({x: 0, y: 0}));
 		});
 
-		game.addDrawable(new Button<undefined>({x: 0, y: 0}, {name: "killButton", data: undefined}, {width: 50, height: 50}));
+		game.addDrawable(
+			new Button<undefined>(
+				{x: game.canvas.width - 50 - 10, y: game.canvas.height - 50 - 10},
+				{name: "killButton", data: undefined},
+				{width: 50, height: 50}
+			)
+		);
 	}
 
 	onInterfaceClick(_game: Game, action: Action<unknown>, _coord?: Position): void {
@@ -334,7 +342,6 @@ type ActorType = "villager" | "outcast" | "minion" | "demon";
 
 export function getMafiaLibrary(): CardLibrary {
 	const lib = new MafiaLib<ActorType>();
-	// TODO register skills
 	lib.addCardDefinition("villager", {
 		name: "hunter",
 		onReveal: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
@@ -356,7 +363,7 @@ export function getMafiaLibrary(): CardLibrary {
 
 			let reportedDistance;
 			if (isLying) {
-				reportedDistance = Math.floor(Math.random() * (cards.length - 1)) + 1;
+				reportedDistance = Math.floor(Math.random() * (cards.length - 1)/2) + 1;
 			} else {
 				reportedDistance = distance;
 			}
