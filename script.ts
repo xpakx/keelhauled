@@ -4,6 +4,7 @@ import { Game } from "./classes/game.js";
 import { getMafiaLibrary, MafiaCardLoader, MafiaRules } from "./classes/examples/mafia.js";
 import { CardLoader, DebugRules, DefaultCardLoader, Rules, TraditionalDeckCardLoader } from "./classes/rules.js";
 import { PairGameCardLoader, PairsMemoryGameRules } from "./classes/examples/memory.js";
+import { HeartsRules } from "./classes/examples/hearts.js";
 
 window.onload = async () => {
 	const canvas = document.getElementById('gameCanvas') as (HTMLCanvasElement | null);
@@ -65,6 +66,8 @@ function nameToRules(name: string): Rules {
 			return new DebugRules();
 		case "mafia": 
 			return new MafiaRules();
+		case "hearts": 
+			return new HeartsRules();
 		case "memory": 
 		case "memoryTrad": 
 		default:
