@@ -26,26 +26,39 @@ export interface InterfaceDrawable<T> {
 	onMouseLeftClickRelease?(position: Position): Action<T>;
 }
 
+export interface TextLabelOptions {
+	fontSize?: number;
+	color?: string;
+	textAlign?: "left" | "right" | "center";
+}
+
 export class TextLabel<T, U> implements Drawable<T, U> {
 	position: Position;
 	text: string;
 
-	constructor(position: Position, text: string, cardSize: Size, ctx: CanvasRenderingContext2D) {
+	fillStyle: string;
+	font: string;
+	textAlign: "left" | "right" | "center";
+
+	constructor(position: Position, text: string, cardSize: Size, ctx: CanvasRenderingContext2D, options?: TextLabelOptions) {
 		this.position = position;
 
-		ctx.fillStyle = "#fff";
-		ctx.font = `21px sans-serif`;
+		this.fillStyle = options?.color ?? "#fff";
+		ctx.fillStyle = this.fillStyle;
+		this.font = `${options?.fontSize ?? 21}px sans-serif`;
+		ctx.font = this.font
 		const textMetrics = ctx.measureText(text);
 		const centerX = cardSize.width / 2 - textMetrics.width / 2;
 		this.position.x += centerX;
 
 		this.text = text;
+		this.textAlign = options?.textAlign ?? "left";
 	}
 
 	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<U>, position?: Position): void {
-		ctx.fillStyle = "#fff";
-		ctx.font = `21px sans-serif`;
-		ctx.textAlign = "left";
+		ctx.fillStyle = this.fillStyle;
+		ctx.font = this.font;
+		ctx.textAlign = this.textAlign;
 		ctx.textBaseline = "bottom";
 		ctx.fillText(
 			this.text,
