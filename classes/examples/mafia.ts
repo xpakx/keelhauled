@@ -1,10 +1,10 @@
-import { Assets } from "./assets.js";
-import { CardLibrary, Deck } from "./card-lib.js";
-import { CardSlot, StartDataFn } from "./card.js";
-import { Circle } from "./containers/circle.js";
-import { Game, Position } from "./game.js";
-import { CardLoader, DefaultCardLoader, Rules } from "./rules.js";
-import { Action, Button, Drawable, TextLabel } from "./drawable.js";
+import { Assets } from "../assets.js";
+import { CardLibrary, Deck } from "../card-lib.js";
+import { CardSlot, StartDataFn } from "../card.js";
+import { Circle } from "../containers/circle.js";
+import { Game, Position } from "../game.js";
+import { CardLoader, DefaultCardLoader, Rules } from "../rules.js";
+import { Action, Button, Drawable, TextLabel } from "../drawable.js";
 
 interface CardData {
 	skillUsed: boolean,
