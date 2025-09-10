@@ -127,11 +127,15 @@ export class Deck implements CardProducer {
 		return this.cardLib.getCard(name);
 	}
 
+	drawCards(amount: number): Card[] {
+		return this.cards.splice(0, amount).map((c) => this.cardLib.getCard(c)).filter(c => c !== undefined);
+	}
+
 	double() {
 		this.cards = [...this.cards, ...this.cards];
 	}
 
-	subdeck(amount: number, options?: SubdeckOptions) {
+	subdeck(amount: number, options?: SubdeckOptions): Deck {
 		const chosen = this.cards.slice(0, amount);
 		const subdeck = new Deck(this.cardLib, chosen);
 		if (!options) return subdeck;
