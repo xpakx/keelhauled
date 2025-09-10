@@ -107,6 +107,10 @@ export class Deck implements CardProducer {
 		return this.cardLib.getCard(name);
 	}
 
+	removeCard(name: string) {
+		this.cards = this.cards.filter((c) => c !== name);
+	}
+
 	getCards(): Card[] {
 		return this.cards.map(c => this.cardLib.getCard(c)).filter(c => c!== undefined);
 	}
