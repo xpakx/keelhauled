@@ -1,6 +1,6 @@
-import { CardLibrary, Deck } from "../card-lib.js";
+import { CardProducer, Deck } from "../card-lib.js";
 import { Card  } from "../card.js";
-import { Fan } from "../containers/fan.js";
+import { Stack } from "../containers/stack.js";
 import { Game, Position } from "../game.js";
 import { Rules } from "../rules.js";
 
@@ -15,13 +15,15 @@ export class HeartsRules implements Rules {
 		for (let i = 0; i < this.players; i++) {
 
 			const playerCards = deck.drawCards(handSize);
-			const playerArea = new Fan(
-				{width: game.canvas.width, height: game.canvas.height},
-				this.getHandPosition(game, i)
+			const playerArea = new Stack(
+				this.getHandWidth(),
+				{
+					position: this.getHandPosition(game, i),
+					orientation: i%2 == 0 ? "horizontal" : "vertical"
+				}
 			);
-			playerArea.maxCards = handSize;
 			game.registerContainer(`player${i}`, playerArea); 
-			playerArea.setCards(playerCards);
+			playerArea.setCards(playerCards, i === 0);
 			
 		}
 	}
@@ -35,12 +37,31 @@ export class HeartsRules implements Rules {
 		}
 	}
 
+	getHandWidth(): number {
+		return this.getHandSize() * 25;
+	}
+
 	getHandPosition(game: Game, index: number): Position {
+		const padding = 20;
+		const cardHeight = game.cardLib.getDefaultSize().height;
+		const cardWidth = game.cardLib.getDefaultSize().width;
 		switch (index) {
-			case 0: return {x: 0, y: game.canvas.height/2 - 50};
-			case 1: return {x: game.canvas.width/2 - 100, y: 0};
-			case 2: return {x: 0, y: -game.canvas.height/2 + 200};
-			case 3: return {x: -game.canvas.width/2 + 100, y: 0};
+			case 0: return {
+				x: game.canvas.width/2 - this.getHandWidth()/2 - cardWidth/2,
+				y: game.canvas.height - cardHeight - padding
+			};
+			case 1: return {
+				x: game.canvas.width - cardWidth - padding,
+				y: game.canvas.height/2 - this.getHandWidth()/2 - cardHeight/2
+			};
+			case 2: return {
+				x: game.canvas.width/2 - this.getHandWidth()/2 - cardWidth/2,
+				y: padding
+			};
+			case 3: return {
+				x: padding, 
+				y: game.canvas.height/2 - this.getHandWidth()/2 - cardHeight/2
+			};
 			default: return {x: 0, y: 0}
 		}
 		
@@ -66,7 +87,7 @@ export class HeartsRules implements Rules {
 }
 
 class HeartsDeck extends Deck {
-	static of(library: CardLibrary, players?: number): HeartsDeck {
+	static of(library: CardProducer, players?: number): HeartsDeck {
 		const deck = new HeartsDeck(library);
 		if (players !== undefined) deck.removeCards(players);
 		return deck;
