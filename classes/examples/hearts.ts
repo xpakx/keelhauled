@@ -70,9 +70,8 @@ export class HeartsRules implements Rules {
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
 		const playerHand = game.getContainer("player0") as Stack<unknown> | undefined;
 		if (!playerHand) return;
-		const cardInHand = playerHand.cards.findIndex(c => c.getCard() === card);
-		if (cardInHand < 0) return;
-		playerHand.cards.splice(cardInHand, 1);
+		const slot = playerHand.removeCard(card);
+		if (!slot) return;
 	}
 
 	isGameOver(_game: Game): boolean {

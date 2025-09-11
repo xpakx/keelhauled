@@ -105,5 +105,20 @@ export class Stack<T> implements CardContainer<T> {
 	setDataFunction(fn: StartDataFn<T>) {
 		this.initFn = fn;
 	}
+
+	removeCard(card: Card): CardSlot<T> | undefined {
+		const cardInHand = this.cards.findIndex(c => c.getCard() === card);
+		if (cardInHand < 0) return;
+		const [toReturn] = this.cards.splice(cardInHand, 1);
+		const step = this.width/this.cards.length;
+
+		this.cards.forEach((slot, i) => {
+			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
+			const y = this.orientation === "horizontal" ? this.position.y : this.position.y + i * step;
+			slot.coord.x = x;
+			slot.coord.y = y;
+		});
+		return toReturn;
+	}
 }
 
