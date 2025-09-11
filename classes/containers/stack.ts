@@ -106,10 +106,8 @@ export class Stack<T> implements CardContainer<T> {
 		this.initFn = fn;
 	}
 
-	removeCard(card: Card): CardSlot<T> | undefined {
-		const cardInHand = this.cards.findIndex(c => c.getCard() === card);
-		if (cardInHand < 0) return;
-		const [toReturn] = this.cards.splice(cardInHand, 1);
+	removeCard(card: Card | String): CardSlot<T> | undefined {
+		const toReturn = card instanceof String ? this.removeCardByName(card) : this.removeCardByCard(card);
 		const step = this.width/this.cards.length;
 
 		this.cards.forEach((slot, i) => {
@@ -118,6 +116,20 @@ export class Stack<T> implements CardContainer<T> {
 			slot.coord.x = x;
 			slot.coord.y = y;
 		});
+		return toReturn;
+	}
+
+	private removeCardByCard(card: Card): CardSlot<T> | undefined {
+		const cardInHand = this.cards.findIndex(c => c.getCard() === card);
+		if (cardInHand < 0) return;
+		const [toReturn] = this.cards.splice(cardInHand, 1);
+		return toReturn;
+	}
+
+	private removeCardByName(card: String): CardSlot<T> | undefined {
+		const cardInHand = this.cards.findIndex(c => c.getCard()?.name === card);
+		if (cardInHand < 0) return;
+		const [toReturn] = this.cards.splice(cardInHand, 1);
 		return toReturn;
 	}
 }
