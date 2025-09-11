@@ -1,6 +1,6 @@
 import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
-import { CardContainer } from "./card-container.js";
+import { CardContainer, CardsSettingOptions } from "./card-container.js";
 
 export type CurveFn = (t: number, radius: number, center: Position) => { x: number; y: number; angle?: number };
 
@@ -26,7 +26,7 @@ export class Fan<T> implements CardContainer<T> {
 		this.radius = radius;
 	}
 
-	setCards(cards: Card[]) {
+	setCards(cards: Card[], options?: CardsSettingOptions) {
 		const step = 1 / (this.maxCards - 1);
 		const start = Math.max(0, (this.maxCards - cards.length)/2)*step;
 		cards.forEach((card, i) => {
@@ -36,6 +36,7 @@ export class Fan<T> implements CardContainer<T> {
 			card.flipped = true; // DEBUG
 			const slot = new CardSlot<T>({x, y}, i, angle);
 			if (this.initFn) slot.setInitFunction(this.initFn);
+			if (options?.flipped) card.flipped = true;
 			slot.putCard(card);
 			this.cards.push(slot);
 		});

@@ -23,7 +23,7 @@ export class HeartsRules implements Rules {
 				}
 			);
 			game.registerContainer(`player${i}`, playerArea); 
-			playerArea.setCards(playerCards, i === 0);
+			playerArea.setCards(playerCards, {flipped: i === 0});
 			
 		}
 	}

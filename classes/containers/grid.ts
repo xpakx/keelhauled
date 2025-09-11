@@ -1,7 +1,7 @@
 import { CardProducer } from "../card-lib.js";
 import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
-import { CardContainer } from "./card-container.js";
+import { CardContainer, CardsSettingOptions } from "./card-container.js";
 import { Rules } from "../rules.js";
 
 export class Grid<T> implements CardContainer<T> {
@@ -78,15 +78,15 @@ export class Grid<T> implements CardContainer<T> {
 		card.deal({x, y}, (maxDist-slot.zIndex)*300);
 	}
 
-	setCards(cards: Card[]) {
+	setCards(cards: Card[], options?: CardsSettingOptions) {
 		const n = Math.min(cards.length, this.cards.length);
 
 		for (let i = 0; i < n; i++) {
 			const card = cards[i];
 			const slot = this.cards[i];
 			slot.putCard(card);
+			if (options?.flipped) card.flipped = true;
 			this.dealCard(slot);
-
 		}
 	}
 

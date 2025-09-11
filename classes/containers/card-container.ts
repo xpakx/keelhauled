@@ -7,6 +7,10 @@ export interface CardContainer<T> {
 	onMouseLeftClick(position: Position): CardSlot<T> | undefined;
 	onMouseLeftClickRelease(position: Position): void;
 	getCards(): Card[];
-	setCards(cards: Card[]): void;
+	setCards(cards: Card[], opt?: CardsSettingOptions): void;
+}
+
+export interface CardsSettingOptions {
+	flipped?: boolean;
 }
 

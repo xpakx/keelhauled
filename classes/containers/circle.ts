@@ -1,6 +1,6 @@
 import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
-import { CardContainer } from "./card-container.js";
+import { CardContainer, CardsSettingOptions } from "./card-container.js";
 
 export class Circle<T> implements CardContainer<T> {
 	center: Position;
@@ -23,11 +23,12 @@ export class Circle<T> implements CardContainer<T> {
 		this.initFn = fn;
 	}
 
-	setCards(cards: Card[]) {
+	setCards(cards: Card[], options?: CardsSettingOptions) {
 		const newCards = cards.map((c, i) => {
 			const slot = (i < this.cards.length) ? this.cards[i] : new CardSlot<T>({x: 0, y: 0}, 0);
 			if (this.initFn) slot.setInitFunction(this.initFn);
 			slot.putCard(c);
+			if (options?.flipped) c.flipped = true;
 			return slot;
 		});
 		this.cards = newCards;

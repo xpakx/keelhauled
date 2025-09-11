@@ -1,6 +1,6 @@
 import { Card, CardSlot, StartDataFn } from "../card.js";
-import { Position, Size } from "../game.js";
-import { CardContainer } from "./card-container.js";
+import { Position } from "../game.js";
+import { CardContainer, CardsSettingOptions } from "./card-container.js";
 
 export type StackOrientation = "horizontal" | "vertical";
 
@@ -28,13 +28,13 @@ export class Stack<T> implements CardContainer<T> {
 		this.width = width;
 	}
 
-	setCards(cards: Card[], flipped?: boolean) {
+	setCards(cards: Card[], options?: CardsSettingOptions) {
 		const step = this.width/cards.length;
 		cards.forEach((card, i) => {
 			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
 			const y = this.orientation === "horizontal" ? this.position.y : this.position.y + i * step;
 			card.dealt = true; // DEBUG
-			if (flipped) card.flipped = true;
+			if (options?.flipped) card.flipped = true;
 			const slot = new CardSlot<T>({x, y}, i);
 			if (this.initFn) slot.setInitFunction(this.initFn);
 			slot.putCard(card);
