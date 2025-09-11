@@ -13,3 +13,6 @@ serve:
 
 test:
 	npm run test
+
+bundle: js
+	npm run bundle

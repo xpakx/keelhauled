@@ -6,12 +6,14 @@
     "test": "npx jest --passWithNoTests",
     "build": "npx tsc && cp -r index.html styles.css images audio dist",
     "clean": "rm -rf dist/*",
-    "serve": "python3 -m http.server --directory dist 8080"
+    "serve": "python3 -m http.server --directory dist 8080",
+    "bundle": "esbuild dist/script.js --bundle --minify --outfile=script.js && rm -rf dist/classes && rm -f dist/script.js && mv script.js dist/"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "esbuild": "0.25.9",
     "typescript": "^5.9.2"
   }
 }
