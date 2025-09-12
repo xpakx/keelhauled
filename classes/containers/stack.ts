@@ -1,5 +1,5 @@
 import { Card, CardSlot, StartDataFn } from "../card.js";
-import { Position } from "../game.js";
+import { Position, Size } from "../game.js";
 import { CardContainer, CardsSettingOptions } from "./card-container.js";
 
 export type StackOrientation = "horizontal" | "vertical";
@@ -22,23 +22,40 @@ export class Stack<T> implements CardContainer<T> {
 	width: number;
 	orientation: StackOrientation;
 	align: Align;
-	step: number;
+	step: number | undefined;
+	
+	cardSize: Size;
 
-	constructor(width: number, cardWidth: number, opt?: StackOptions) {
+	constructor(width: number, cardSize: Size, opt?: StackOptions) {
 		const pos = opt?.position || {x: 0, y: 0};
 		this.orientation = opt?.orientation || "horizontal";
+		this.cardSize = {width: cardSize.width, height: cardSize.height};
 		this.position = {
 			x: pos.x,
 			y: pos.y,
 		};
 		this.width = width;
 		this.align = opt?.alignContent ?? "left";
-		const maxLen = opt?.idealHandLength || 13;
-		this.step = (width - cardWidth)/(maxLen - 1);
+		if (opt?.idealHandLength) {
+			const cardGapSize = this.getCardGapSize();
+			this.step = (width - cardGapSize)/(opt.idealHandLength - 1);
+		}
+	}
+
+	private getCardGapSize(): number {
+		if (this.orientation === "horizontal") return this.cardSize.width;
+		else return this.cardSize.height;
+	}
+
+	private getStep(numOfCards?: number): number {
+		if (this.step) return this.step;
+		const cardGapSize = this.getCardGapSize();
+		const cards = numOfCards ?? this.cards.length;
+		return (this.width - cardGapSize)/(cards - 1);
 	}
 
 	setCards(cards: Card[], options?: CardsSettingOptions) {
-		const step = this.step;
+		const step = this.getStep(cards.length);
 		cards.forEach((card, i) => {
 			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
 			const y = this.orientation === "horizontal" ? this.position.y : this.position.y + i * step;
@@ -76,10 +93,10 @@ export class Stack<T> implements CardContainer<T> {
 	private mouseToIndex(pos: Position): number | undefined {
 		if (!this.cards.length) return;
 
-		const step = this.step;
-		const cardWidth = this.cards[0].getCard()!.size.width;
-		const cardHeight = this.cards[0].getCard()!.size.height;
-		const realWidth = (this.cards.length-1)*this.step + (this.orientation === "horizontal" ? cardWidth : cardHeight);
+		const step = this.getStep();
+		const cardWidth = this.cardSize.width;
+		const cardHeight = this.cardSize.height;
+		const realWidth = (this.cards.length-1)*this.getStep() + (this.orientation === "horizontal" ? cardWidth : cardHeight);
 
 		const firstDimCorrect = this.orientation === "horizontal"
 			? pos.x >= this.position.x && pos.x <= this.position.x + realWidth
@@ -118,7 +135,7 @@ export class Stack<T> implements CardContainer<T> {
 
 	removeCard(card: Card | string): CardSlot<T> | undefined {
 		const toReturn = typeof card === "string" ? this.removeCardByName(card) : this.removeCardByCard(card);
-		const step = this.step;
+		const step = this.getStep();
 
 		this.cards.forEach((slot, i) => {
 			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;

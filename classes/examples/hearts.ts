@@ -17,10 +17,11 @@ export class HeartsRules implements Rules {
 			const playerCards = deck.drawCards(handSize);
 			const playerArea = new Stack(
 				this.getHandWidth(),
-				i%2 == 0 ? playerCards[0].size.width : playerCards[0].size.height,
+				playerCards[0].size,
 				{
 					position: this.getHandPosition(game, i),
-					orientation: i%2 == 0 ? "horizontal" : "vertical"
+					orientation: i%2 == 0 ? "horizontal" : "vertical",
+					idealHandLength: this.getHandSize(),
 				}
 			);
 			game.registerContainer(`player${i}`, playerArea); 
