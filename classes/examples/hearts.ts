@@ -27,6 +27,12 @@ export class HeartsRules implements Rules {
 			);
 			game.registerContainer(`player${i}`, playerArea); 
 			playerArea.setCards(playerCards, {flipped: i === 0});
+			let cardNum = 0;
+			for (let card of playerArea.cards) {
+				const delay = (cardNum*this.players + i)*50;
+				card.getCard()?.deal({x: -card.coord.x + game.canvas.width/2, y: -card.coord.y + game.canvas.height/2}, delay);
+				cardNum += 1;
+			}
 			
 		}
 		const trickWidth = 3 * 25 + game.cardLib.getDefaultSize().width;
