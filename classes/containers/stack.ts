@@ -146,6 +146,23 @@ export class Stack<T> implements CardContainer<T> {
 		return toReturn;
 	}
 
+	addCard(card: Card | CardSlot<T>) {
+		const step = this.getStep();
+		const i = this.cards.length;
+		const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
+		const y = this.orientation === "horizontal" ? this.position.y : this.position.y + i * step;
+
+		const slot = "coord" in card ? card : new CardSlot<T>({x, y}, i);
+		if (!("coord" in card)) {
+			slot.putCard(card);
+		} else {
+			slot.coord.x = x;
+			slot.coord.y = y
+			slot.zIndex = i;
+		}
+		this.cards.push(slot);
+	}
+
 	private removeCardByCard(card: Card): CardSlot<T> | undefined {
 		const cardInHand = this.cards.findIndex(c => c.getCard() === card);
 		if (cardInHand < 0) return;
