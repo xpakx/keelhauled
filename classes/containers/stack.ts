@@ -7,7 +7,11 @@ export type StackOrientation = "horizontal" | "vertical";
 export interface StackOptions {
 	orientation?: StackOrientation;
 	position?: Position;
+	alignContent?: Align;
+	idealHandLength?: number;
 }
+
+type Align =  "left" | "right" | "center";
 
 export class Stack<T> implements CardContainer<T> {
 	cards: CardSlot<T>[] = [];
@@ -17,8 +21,10 @@ export class Stack<T> implements CardContainer<T> {
 
 	width: number;
 	orientation: StackOrientation;
+	align: Align;
+	step: number;
 
-	constructor(width: number, opt?: StackOptions) {
+	constructor(width: number, cardWidth: number, opt?: StackOptions) {
 		const pos = opt?.position || {x: 0, y: 0};
 		this.orientation = opt?.orientation || "horizontal";
 		this.position = {
@@ -26,10 +32,13 @@ export class Stack<T> implements CardContainer<T> {
 			y: pos.y,
 		};
 		this.width = width;
+		this.align = opt?.alignContent ?? "left";
+		const maxLen = opt?.idealHandLength || 13;
+		this.step = (width - cardWidth)/(maxLen - 1);
 	}
 
 	setCards(cards: Card[], options?: CardsSettingOptions) {
-		const step = this.width/cards.length;
+		const step = this.step;
 		cards.forEach((card, i) => {
 			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
 			const y = this.orientation === "horizontal" ? this.position.y : this.position.y + i * step;
@@ -67,13 +76,14 @@ export class Stack<T> implements CardContainer<T> {
 	private mouseToIndex(pos: Position): number | undefined {
 		if (!this.cards.length) return;
 
-		const step = this.width/this.cards.length;
+		const step = this.step;
 		const cardWidth = this.cards[0].getCard()!.size.width;
 		const cardHeight = this.cards[0].getCard()!.size.height;
+		const realWidth = (this.cards.length-1)*this.step + (this.orientation === "horizontal" ? cardWidth : cardHeight);
 
 		const firstDimCorrect = this.orientation === "horizontal"
-			? pos.x >= this.position.x && pos.x <= this.position.x + this.width + cardWidth - this.width/this.cards.length
-			: pos.y >= this.position.y && pos.y <= this.position.y + this.width + cardHeight - this.width/this.cards.length;
+			? pos.x >= this.position.x && pos.x <= this.position.x + realWidth
+			: pos.y >= this.position.y && pos.y <= this.position.y + realWidth;
 		if (!firstDimCorrect) return;
 		const secondDimCorrect = this.orientation === "horizontal"
 			? pos.y >= this.position.y && pos.y <= this.position.y + cardHeight
@@ -108,7 +118,7 @@ export class Stack<T> implements CardContainer<T> {
 
 	removeCard(card: Card | string): CardSlot<T> | undefined {
 		const toReturn = typeof card === "string" ? this.removeCardByName(card) : this.removeCardByCard(card);
-		const step = this.width/this.cards.length;
+		const step = this.step;
 
 		this.cards.forEach((slot, i) => {
 			const x = this.orientation === "horizontal" ? this.position.x + i * step : this.position.x;
