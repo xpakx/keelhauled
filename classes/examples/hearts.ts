@@ -49,7 +49,6 @@ export class HeartsRules implements Rules {
 		this.currentTrick = {};
 		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
 		if (trick) trick.cards = [];
-		
 	}
 
 	getHandSize(): number {
@@ -119,8 +118,10 @@ export class HeartsRules implements Rules {
 		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
 		if (!trick) return;
 		this.currentTrick[player] = slot;
+		const oldPos = {x: slot.coord.x, y: slot.coord.y};
 		trick.addCard(slot);
 		card.flipped = true;
+		card.deal({x: oldPos.x - slot.coord.x, y: oldPos.y - slot.coord.y});
 		console.log(`Player ${player} played ${card.name}`);
 	}
 
