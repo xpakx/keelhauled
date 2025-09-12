@@ -106,8 +106,8 @@ export class Stack<T> implements CardContainer<T> {
 		this.initFn = fn;
 	}
 
-	removeCard(card: Card | String): CardSlot<T> | undefined {
-		const toReturn = card instanceof String ? this.removeCardByName(card) : this.removeCardByCard(card);
+	removeCard(card: Card | string): CardSlot<T> | undefined {
+		const toReturn = typeof card === "string" ? this.removeCardByName(card) : this.removeCardByCard(card);
 		const step = this.width/this.cards.length;
 
 		this.cards.forEach((slot, i) => {
@@ -126,7 +126,7 @@ export class Stack<T> implements CardContainer<T> {
 		return toReturn;
 	}
 
-	private removeCardByName(card: String): CardSlot<T> | undefined {
+	private removeCardByName(card: string): CardSlot<T> | undefined {
 		const cardInHand = this.cards.findIndex(c => c.getCard()?.name === card);
 		if (cardInHand < 0) return;
 		const [toReturn] = this.cards.splice(cardInHand, 1);
