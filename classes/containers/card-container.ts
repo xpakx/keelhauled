@@ -8,6 +8,8 @@ export interface CardContainer<T> {
 	onMouseLeftClickRelease(position: Position): void;
 	getCards(): Card[];
 	setCards(cards: Card[], opt?: CardsSettingOptions): void;
+	removeCard(card: Card | string): CardSlot<T> | undefined;
+	addCard(card: Card | CardSlot<T>): void;
 }
 
 export interface CardsSettingOptions {

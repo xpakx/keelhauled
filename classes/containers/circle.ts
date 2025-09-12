@@ -108,4 +108,13 @@ export class Circle<T> implements CardContainer<T> {
 	getCards(): Card[] {
 		return this.cards.map(c => c.getCard()).filter(c => c !== undefined);
 	}
+
+	removeCard(_card: Card | string): CardSlot<T> | undefined {
+		// TODO: implement
+		return;
+	}
+
+	addCard(_card: Card | CardSlot<T>): void {
+		// TODO: implement
+	}
 }

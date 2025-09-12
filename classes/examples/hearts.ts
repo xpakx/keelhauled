@@ -1,12 +1,12 @@
 import { CardProducer, Deck } from "../card-lib.js";
-import { Card, CardSlot  } from "../card.js";
+import { Card } from "../card.js";
 import { Stack } from "../containers/stack.js";
 import { Game, Position } from "../game.js";
 import { Rules } from "../rules.js";
 
 export class HeartsRules implements Rules {
 	players: number = 4;
-	currentTrick: Record<number, CardSlot<unknown>> = {};
+	currentTrick: Record<number, Card> = {};
 
 	init(game: Game): void {
 		const deck = HeartsDeck.of(game.cardLib, this.players);
@@ -110,19 +110,12 @@ export class HeartsRules implements Rules {
 		if (alreadyPlayed) return;
 		const playerName = `player${player}`;
 
-		const playerHand = game.getContainer(playerName) as Stack<unknown> | undefined;
-		if (!playerHand) return;
-		const slot = playerHand.removeCard(card);
-		if (!slot) return;
+		if (game.moveCard(card, playerName, "trick")) {
+			this.currentTrick[player] = card;
+			card.flipped = true;
+			console.log(`Player ${player} played ${card.name}`);
+		}
 
-		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
-		if (!trick) return;
-		this.currentTrick[player] = slot;
-		const oldPos = {x: slot.coord.x, y: slot.coord.y};
-		trick.addCard(slot);
-		card.flipped = true;
-		card.deal({x: oldPos.x - slot.coord.x, y: oldPos.y - slot.coord.y});
-		console.log(`Player ${player} played ${card.name}`);
 	}
 
 	private randomPlayer(game: Game, player: number) {

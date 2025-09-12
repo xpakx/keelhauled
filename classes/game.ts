@@ -1,5 +1,6 @@
 import { AudioController } from "./audio.js";
 import { CardLibrary } from "./card-lib.js";
+import { Card } from "./card.js";
 import { CardContainer } from "./containers/card-container.js";
 import { InterfaceDrawable } from "./drawable.js";
 import { Hand } from "./hand.js";
@@ -163,6 +164,20 @@ export class Game {
 
 	cleanDrawables() {
 		this.drawables = [];
+	}
+
+	moveCard(card: Card, fromContainer: string, toContainer: string): boolean {
+		const container1 = this.getContainer(fromContainer);
+		const container2 = this.getContainer(toContainer);
+		if (!container1 || !container2) return false;
+
+		const slot = container1.removeCard(card);
+		if (!slot) return false;
+
+		const oldPos = {x: slot.coord.x, y: slot.coord.y};
+		container2.addCard(slot);
+		card.deal({x: oldPos.x - slot.coord.x, y: oldPos.y - slot.coord.y});
+		return true;
 	}
 }
 

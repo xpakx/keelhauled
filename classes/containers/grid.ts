@@ -152,4 +152,13 @@ export class Grid<T> implements CardContainer<T> {
 	setDataFunction(fn: StartDataFn<T>) {
 		this.initFn = fn;
 	}
+
+	removeCard(_card: Card | string): CardSlot<T> | undefined {
+		// TODO: implement
+		return;
+	}
+
+	addCard(_card: Card | CardSlot<T>): void {
+		// TODO: implement
+	}
 }

@@ -27,7 +27,7 @@ window.onload = async () => {
 
 	let game = new Game(context, canvas, cardLib, nameToRules(rulesName));
 
-	if (rulesName === "mafia") {
+	if (rulesName === "mafia" ) {
 		let sound = new AudioController();
 		await sound.load("audio/flip.mp3", "flip");
 		await sound.load("audio/hit.mp3", "hit");
