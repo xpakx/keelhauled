@@ -1,11 +1,12 @@
 import { CardProducer, Deck } from "../card-lib.js";
-import { Card  } from "../card.js";
+import { Card, CardSlot  } from "../card.js";
 import { Stack } from "../containers/stack.js";
 import { Game, Position } from "../game.js";
 import { Rules } from "../rules.js";
 
 export class HeartsRules implements Rules {
 	players: number = 4;
+	currentTrick: Record<number, CardSlot<unknown>> = {};
 
 	init(game: Game): void {
 		const deck = HeartsDeck.of(game.cardLib, this.players);
@@ -28,6 +29,27 @@ export class HeartsRules implements Rules {
 			playerArea.setCards(playerCards, {flipped: i === 0});
 			
 		}
+		const trickWidth = 3 * 25 + game.cardLib.getDefaultSize().width;
+		const trick = new Stack(
+			trickWidth,
+			game.cardLib.getDefaultSize(),
+			{
+				idealHandLength: 4,
+				position:  { 
+					x: game.canvas.width/2 - trickWidth/2,
+					y: game.canvas.height/2 - game.cardLib.getDefaultSize().height/2
+				}
+			}
+		);
+		game.registerContainer(`trick`, trick); 
+		this.newTrick(game);
+	}
+
+	newTrick(game: Game) {
+		this.currentTrick = {};
+		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
+		if (trick) trick.cards = [];
+		
 	}
 
 	getHandSize(): number {
@@ -70,10 +92,46 @@ export class HeartsRules implements Rules {
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
-		const playerHand = game.getContainer("player0") as Stack<unknown> | undefined;
+		this.playCard(game, 0, card);
+
+		const alreadyPlayed = this.currentTrick[0] !== undefined;
+		if (!alreadyPlayed) return;
+		// TODO
+		this.randomPlayer(game, 1);
+		this.randomPlayer(game, 2);
+		this.randomPlayer(game, 3);
+
+		setTimeout(() => {
+			this.newTrick(game);
+		}, 1000);
+	}
+
+	private playCard(game: Game, player: number, card: Card) {
+		const alreadyPlayed = this.currentTrick[player] !== undefined;
+		if (alreadyPlayed) return;
+		const playerName = `player${player}`;
+
+		const playerHand = game.getContainer(playerName) as Stack<unknown> | undefined;
 		if (!playerHand) return;
 		const slot = playerHand.removeCard(card);
 		if (!slot) return;
+
+		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
+		if (!trick) return;
+		this.currentTrick[player] = slot;
+		trick.addCard(slot);
+		card.flipped = true;
+		console.log(`Player ${player} played ${card.name}`);
+	}
+
+	private randomPlayer(game: Game, player: number) {
+		const playerName = `player${player}`;
+		const playerHand = game.getContainer(playerName) as Stack<unknown> | undefined;
+		if (!playerHand) return;
+
+		const cards = playerHand.getCards();
+		const idx = Math.floor(Math.random() * cards.length);
+		this.playCard(game, player, cards[idx]);
 	}
 
 	isGameOver(_game: Game): boolean {
