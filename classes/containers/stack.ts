@@ -176,5 +176,10 @@ export class Stack<T> implements CardContainer<T> {
 		const [toReturn] = this.cards.splice(cardInHand, 1);
 		return toReturn;
 	}
+
+	clear(removeSlots?: boolean): void {
+		for (let slot of this.cards) slot.removeCard();
+		if (removeSlots) this.cards = [];
+	}
 }
 

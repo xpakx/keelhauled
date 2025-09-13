@@ -10,6 +10,7 @@ export interface CardContainer<T> {
 	setCards(cards: Card[], opt?: CardsSettingOptions): void;
 	removeCard(card: Card | string): CardSlot<T> | undefined;
 	addCard(card: Card | CardSlot<T>): void;
+	clear(removeSlots?: boolean): void;
 }
 
 export interface CardsSettingOptions {

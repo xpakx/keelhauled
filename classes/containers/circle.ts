@@ -117,4 +117,8 @@ export class Circle<T> implements CardContainer<T> {
 	addCard(_card: Card | CardSlot<T>): void {
 		// TODO: implement
 	}
+
+	clear(): void {
+		for (let slot of this.cards) slot.removeCard();
+	}
 }

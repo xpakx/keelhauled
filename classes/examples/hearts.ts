@@ -1,6 +1,5 @@
 import { CardProducer, Deck } from "../card-lib.js";
 import { Card } from "../card.js";
-import { Stack } from "../containers/stack.js";
 import { Game, Position } from "../game.js";
 import { Layouts } from "../layouts.js";
 import { Rules } from "../rules.js";
@@ -19,8 +18,7 @@ export class HeartsRules implements Rules {
 
 	newTrick(game: Game) {
 		this.currentTrick = {};
-		const trick = game.getContainer("trick") as Stack<unknown> | undefined;
-		if (trick) trick.cards = [];
+		game.getContainer("trick")?.clear(true);
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
