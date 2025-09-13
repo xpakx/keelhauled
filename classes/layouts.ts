@@ -1,6 +1,6 @@
 import { Deck } from "./card-lib.js";
 import { Stack } from "./containers/stack.js";
-import { Game, Position } from "./game.js";
+import { Game, Position, Size } from "./game.js";
 
 export class Layouts {
 
@@ -17,7 +17,7 @@ export class Layouts {
 				handWidth,
 				game.cardLib.getDefaultSize(),
 				{
-					position: Layouts.getHandPosition(game, i, handWidth),
+					position: Layouts.getHandPosition(game, i, handWidth, players),
 					orientation: i%2 == 0 ? "horizontal" : "vertical",
 					idealHandLength: handSize,
 				}
@@ -56,7 +56,7 @@ export class Layouts {
 		}
 	}
 
-	private static getHandPosition(game: Game, index: number, handWidth: number): Position {
+	private static getHandPosition(game: Game, index: number, handWidth: number, _players: number): Position {
 		const padding = 20;
 		const cardHeight = game.cardLib.getDefaultSize().height;
 		const cardWidth = game.cardLib.getDefaultSize().width;
@@ -80,5 +80,33 @@ export class Layouts {
 			default: return {x: 0, y: 0}
 		}
 		
+	}
+
+
+	static getRegularPolygon(canvasSize: Size, n: number, r: number, i: number, handWidth?: number,): Position {
+		const cx = canvasSize.width / 2;
+		const cy = canvasSize.height / 2;
+
+		const step = (2 * Math.PI) / n;
+
+		const startAngle = Math.PI / 2;
+
+		const angle = startAngle + i * step;
+		const x = cx + r * Math.cos(angle);
+		const y = cy + r * Math.sin(angle);
+
+		if (!handWidth) return { x, y };
+
+		// move by vector
+		const tx = Math.sin(angle);
+		const ty = -Math.cos(angle);
+		const xSign = (tx < 0) ? -1 : 1;
+		const ySign = (tx < 0) ? -1 : 1;
+
+		const shift = -handWidth / 2;
+		const xShifted = x + tx * shift * xSign;
+		const yShifted = y + ty * shift * ySign;
+
+		return { x: xShifted, y: yShifted };
 	}
 }
