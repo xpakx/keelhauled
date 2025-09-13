@@ -144,3 +144,48 @@ export class DealingAnimation implements Animation {
 	}
 }
 
+export class SpriteAnimation implements Animation {
+	name: string;
+	amplitude: number = 1;
+	finished: boolean = false;
+
+	frameLength: number;
+	started: number;
+
+	frame: number;
+	frames: HTMLImageElement[] = [];
+
+	timesToLoop?: number;
+	originalFace: HTMLImageElement | undefined;
+
+	constructor(name: string, sequence: HTMLImageElement[], originalFace?: HTMLImageElement, timesToLoop?: number) {
+		this.name = name;
+		this.frameLength = 30;
+		this.started = 0;
+		this.frame = 0;
+		this.frames = sequence;
+		this.timesToLoop = timesToLoop;
+		this.originalFace = originalFace;
+	}
+
+	tick(timestamp: number, card: Card): undefined {
+		if (timestamp < this.started) return;
+		const elapsed = timestamp - this.started;
+		this.frame = Math.floor(elapsed / this.frameLength) % this.frames.length;
+
+		card.face = this.frames[this.frame];
+
+		if (this.timesToLoop) {
+			let currentLoop = Math.floor(elapsed / (this.frames.length * this.frameLength));
+			if (currentLoop >= this.timesToLoop) this.finished = true;
+		}
+	}
+
+	clean(card: Card): undefined { 
+		card.face = this.originalFace;
+	}
+
+	init(): undefined {
+		this.started = performance.now();
+	}
+}
