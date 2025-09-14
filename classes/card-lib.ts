@@ -10,6 +10,7 @@ export interface CardProducer {
 	getCard(name: string): Card | undefined;
 	getRandomCard(): Card | undefined;
 	getKeys(): string[];
+	size(): number;
 }
 
 export class CardLibrary implements CardProducer {
@@ -85,6 +86,10 @@ export class CardLibrary implements CardProducer {
 
 		return new Deck(this, cards);
 	}
+
+	size(): number {
+		return this.cardDefinitions.size;
+	}
 }
 
 export class Deck implements CardProducer {
@@ -151,6 +156,10 @@ export class Deck implements CardProducer {
 	join(deck: Deck) {
 		if (deck.cardLib !== this.cardLib) throw new Error("Incompatible deck sources");
 		this.cards = [...this.cards, ...deck.cards];
+	}
+
+	size(): number {
+		return this.cards.length;
 	}
 }
 
