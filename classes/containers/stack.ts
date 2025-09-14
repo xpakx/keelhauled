@@ -28,17 +28,22 @@ export class Stack<T> implements CardContainer<T> {
 	orientation: StackOrientation;
 	align: Align;
 	step: number | undefined;
+	size: Size;
 	
 	cardSize: Size;
 
 	constructor(width: number, cardSize: Size, opt?: StackOptions) {
 		let pos = opt?.position || {x: 0, y: 0};
+		this.orientation = opt?.orientation || "horizontal";
+		this.size = {
+			width: this.orientation === "horizontal" ? width : cardSize.width,
+			height: this.orientation === "horizontal" ? cardSize.height : width,
+		}
 		if (opt?.anchor) {
-			const anchorAdjustment = Layouts.adjustToAnchor({width, height: cardSize.height}, opt.anchor);
+			const anchorAdjustment = Layouts.adjustToAnchor(this.size, opt.anchor);
 			pos.x -= anchorAdjustment.x;
 			pos.y -= anchorAdjustment.y;
 		}
-		this.orientation = opt?.orientation || "horizontal";
 		this.cardSize = {width: cardSize.width, height: cardSize.height};
 		this.position = {
 			x: pos.x,
