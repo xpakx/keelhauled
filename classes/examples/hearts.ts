@@ -9,10 +9,10 @@ export class HeartsRules implements Rules {
 	currentTrick: Record<number, Card> = {};
 
 	init(game: Game): void {
-		Layouts.setTrickTakingLayout(game, this.players);
 		const deck = HeartsDeck.of(game.cardLib, this.players);
+		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: deck.size()});
 		deck.shuffle();
-		Layouts.dealTrickTaking(game, this.players, deck);
+		Layouts.dealTrickTaking(game, deck, {players: this.players});
 		this.newTrick(game);
 	}
 

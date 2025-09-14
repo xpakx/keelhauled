@@ -2,14 +2,27 @@ import { Deck } from "./card-lib.js";
 import { Stack } from "./containers/stack.js";
 import { Game, Position, Size } from "./game.js";
 
+export interface LayoutOptions {
+	players?: number;
+	deckSize?: number;
+	handSize?: number;
+	experimentalPlacementAlgorithm?: boolean;
+}
+
+export interface DealOptions {
+	players?: number;
+	handSize?: number;
+}
+
 export class Layouts {
 
 	constructor() {
 		throw new Error('Layouts is a static class and cannot be instantiated');
 	}
 
-	static setTrickTakingLayout(game: Game, players: number = 4)  {
-		const handSize = 13; // TODO: deck.len/players
+	static setTrickTakingLayout(game: Game, opt?: LayoutOptions)  {
+		const players = opt?.players ?? 4;
+		const handSize = opt?.handSize ?? (opt?.deckSize ? Math.floor(opt.deckSize/players): 13);
 		const handWidth = (handSize-1) * 25 + game.cardLib.getDefaultSize().width;
 		for (let i = 0; i < players; i++) {
 
@@ -17,7 +30,9 @@ export class Layouts {
 				handWidth,
 				game.cardLib.getDefaultSize(),
 				{
-					position: Layouts.getHandPosition(game, i, handWidth, players),
+					position: opt?.experimentalPlacementAlgorithm 
+						? Layouts.getHandPositionExperimental(game, i, handWidth, players)
+						: Layouts.getHandPosition(game, i, handWidth, players),
 					orientation: i%2 == 0 ? "horizontal" : "vertical",
 					idealHandLength: handSize,
 				}
@@ -39,8 +54,9 @@ export class Layouts {
 		game.registerContainer(`trick`, trick); 
 	}
 
-	static dealTrickTaking(game: Game, players: number = 4, deck: Deck)  {
-		const handSize = 13; // TODO: deck.len/players
+	static dealTrickTaking(game: Game, deck: Deck, opt?: DealOptions)  {
+		const players = opt?.players ?? 4;
+		const handSize = opt?.handSize ?? Math.floor(deck.size()/players);
 		for (let i = 0; i < players; i++) {
 			const playerArea = game.getContainer(`player${i}`) as Stack<unknown> | undefined; 
 			if (!playerArea) continue;
@@ -80,6 +96,16 @@ export class Layouts {
 			default: return {x: 0, y: 0}
 		}
 		
+	}
+
+	private static getHandPositionExperimental(game: Game, index: number, handWidth: number, players: number): Position {
+		return Layouts.getRegularPolygon(
+			{width: game.canvas.width, height: game.canvas.height},
+			players,
+			250,
+			index,
+			handWidth
+		);
 	}
 
 
