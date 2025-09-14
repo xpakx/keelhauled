@@ -1,5 +1,6 @@
 import { Card, CardSlot, StartDataFn } from "../card.js";
 import { Position, Size } from "../game.js";
+import { Layouts } from "../layouts.js";
 import { CardContainer, CardsSettingOptions } from "./card-container.js";
 
 export type StackOrientation = "horizontal" | "vertical";
@@ -9,9 +10,13 @@ export interface StackOptions {
 	position?: Position;
 	alignContent?: Align;
 	idealHandLength?: number;
+	anchor?: Anchor;
 }
 
 type Align =  "left" | "right" | "center";
+export type Anchor =  "center" 
+	| "left" | "top" | "right" | "bottom"
+	| "leftTop" | "rightTop" | "rightBottom" | "leftBottom";
 
 export class Stack<T> implements CardContainer<T> {
 	cards: CardSlot<T>[] = [];
@@ -27,7 +32,12 @@ export class Stack<T> implements CardContainer<T> {
 	cardSize: Size;
 
 	constructor(width: number, cardSize: Size, opt?: StackOptions) {
-		const pos = opt?.position || {x: 0, y: 0};
+		let pos = opt?.position || {x: 0, y: 0};
+		if (opt?.anchor) {
+			const anchorAdjustment = Layouts.adjustToAnchor({width, height: cardSize.height}, opt.anchor);
+			pos.x -= anchorAdjustment.x;
+			pos.y -= anchorAdjustment.y;
+		}
 		this.orientation = opt?.orientation || "horizontal";
 		this.cardSize = {width: cardSize.width, height: cardSize.height};
 		this.position = {

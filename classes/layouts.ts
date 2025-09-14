@@ -1,5 +1,5 @@
 import { Deck } from "./card-lib.js";
-import { Stack } from "./containers/stack.js";
+import { Anchor, Stack } from "./containers/stack.js";
 import { Game, Position, Size } from "./game.js";
 
 export interface LayoutOptions {
@@ -35,6 +35,7 @@ export class Layouts {
 						: Layouts.getHandPosition(game, i, handWidth, players),
 					orientation: i%2 == 0 ? "horizontal" : "vertical",
 					idealHandLength: handSize,
+					anchor: opt?.experimentalPlacementAlgorithm ? "center" : undefined,
 				}
 			);
 			game.registerContainer(`player${i}`, playerArea); 
@@ -98,18 +99,17 @@ export class Layouts {
 		
 	}
 
-	private static getHandPositionExperimental(game: Game, index: number, handWidth: number, players: number): Position {
+	private static getHandPositionExperimental(game: Game, index: number, _handWidth: number, players: number): Position {
 		return Layouts.getRegularPolygon(
 			{width: game.canvas.width, height: game.canvas.height},
 			players,
 			250,
 			index,
-			handWidth
 		);
 	}
 
 
-	static getRegularPolygon(canvasSize: Size, n: number, r: number, i: number, handWidth?: number,): Position {
+	static getRegularPolygon(canvasSize: Size, n: number, r: number, i: number): Position {
 		const cx = canvasSize.width / 2;
 		const cy = canvasSize.height / 2;
 
@@ -121,18 +121,30 @@ export class Layouts {
 		const x = cx + r * Math.cos(angle);
 		const y = cy + r * Math.sin(angle);
 
-		if (!handWidth) return { x, y };
+		return { x, y };
+	}
 
-		// move by vector
-		const tx = Math.sin(angle);
-		const ty = -Math.cos(angle);
-		const xSign = (tx < 0) ? -1 : 1;
-		const ySign = (tx < 0) ? -1 : 1;
-
-		const shift = -handWidth / 2;
-		const xShifted = x + tx * shift * xSign;
-		const yShifted = y + ty * shift * ySign;
-
-		return { x: xShifted, y: yShifted };
+	static adjustToAnchor(size: Size, anchor: Anchor): Position {
+		switch(anchor) {
+			case "center":
+				return {x: size.width/2, y: size.height/2}
+			case "top":
+				return {x: size.width/2, y: 0}
+			case "rightTop":
+				return {x: size.width, y: 0}
+			case "right":
+				return {x: size.width, y: size.height/2}
+			case "rightBottom":
+				return {x: size.width, y: size.height}
+			case "bottom":
+				return {x: size.width/2, y: size.height}
+			case "leftBottom":
+				return {x: 0, y: size.height}
+			case "left":
+				return {x: 0, y: size.height/2}
+			case "leftTop":
+			default:
+				return {x: 0, y: 0}
+		}
 	}
 }
