@@ -33,7 +33,7 @@ export class Layouts {
 					position: opt?.experimentalPlacementAlgorithm 
 						? Layouts.getHandPositionExperimental(game, i, handWidth, players)
 						: Layouts.getHandPosition(game, i, handWidth, players),
-					orientation: i%2 == 0 ? "horizontal" : "vertical",
+					orientation: this.getOrientation(players, i),
 					idealHandLength: handSize,
 					anchor: opt?.experimentalPlacementAlgorithm ? "center" : undefined,
 				}
@@ -55,6 +55,17 @@ export class Layouts {
 		game.registerContainer(`trick`, trick); 
 	}
 
+	private static getOrientation(players: number, index: number): "horizontal" | "vertical" {
+		switch(players) {
+			case 5:
+			case 3: return index === 0 ? "horizontal" : "vertical";
+			case 6: return index === 0 || index === 3 ? "horizontal" : "vertical";
+			case 4: return index%2 === 0 ? "horizontal" : "vertical";
+			default:
+				return "horizontal"
+		}
+	}
+
 	static dealTrickTaking(game: Game, deck: Deck, opt?: DealOptions)  {
 		const players = opt?.players ?? 4;
 		const handSize = opt?.handSize ?? Math.floor(deck.size()/players);
@@ -66,7 +77,10 @@ export class Layouts {
 			let cardNum = 0;
 			for (let card of playerArea.cards) {
 				const delay = (cardNum*players + i)*50;
-				card.getCard()?.deal({x: -card.coord.x + game.canvas.width/2, y: -card.coord.y + game.canvas.height/2}, delay);
+				card.getCard()?.deal({
+					x: game.canvas.width/2 - card.coord.x - game.cardLib.getDefaultSize().width/2,
+					y: game.canvas.height/2 - card.coord.y - game.cardLib.getDefaultSize().height/2
+				}, delay);
 				cardNum += 1;
 			}
 			
