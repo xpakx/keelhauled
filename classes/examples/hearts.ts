@@ -42,10 +42,16 @@ export class HeartsRules implements Rules {
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
 		if (this.locked) return;
+
+		const legal = this.getLegalCards(game, 0);
+		const isCardLegal = legal.some((c) => c === card.name);
+		if (!isCardLegal) return;
+
 		this.playCard(game, 0, card);
 
 		const alreadyPlayed = this.currentTrick[0] !== undefined;
 		if (!alreadyPlayed) return;
+
 
 		this.currentPlayer += 1;
 		this.currentPlayer = this.currentPlayer % this.players;
@@ -67,11 +73,26 @@ export class HeartsRules implements Rules {
 		else this.newTrick(game);
 	}
 
+	getLegalCards(game: Game, player: number) {
+		const playerHand = game.getContainer(`player${player}`);
+		if (!playerHand) return [];
+
+		let cards = playerHand.getCards().map((c) => c.name);
+
+		const suit = this.currentTrick[this.startingPlayer];
+		if (suit) {
+			const playersCardsInSuit = cards
+				.filter((c) => c[1] === suit.name[1]);
+			if (playersCardsInSuit.length > 0) cards = playersCardsInSuit;
+		}
+		return cards;
+	}
+
 	private playCard(game: Game, player: number, card: Card) {
 		const alreadyPlayed = this.currentTrick[player] !== undefined;
 		if (alreadyPlayed) return;
-		const playerName = `player${player}`;
 
+		const playerName = `player${player}`;
 		if (game.moveCard(card, playerName, "trick")) {
 			this.currentTrick[player] = card;
 			card.flipped = true;
@@ -85,9 +106,11 @@ export class HeartsRules implements Rules {
 		const playerHand = game.getContainer(playerName);
 		if (!playerHand) return;
 
-		const cards = playerHand.getCards();
-		const idx = Math.floor(Math.random() * cards.length);
-		this.playCard(game, player, cards[idx]);
+		const legal = this.getLegalCards(game, player);
+		const idx = Math.floor(Math.random() * legal.length);
+		const card = playerHand.getCards().find((c) => c.name === legal[idx]);
+		if (!card) return;
+		this.playCard(game, player, card);
 	}
 
 	isGameOver(_game: Game): boolean {
