@@ -11,6 +11,8 @@ export class HeartsRules implements Rules {
 	startingPlayer: number = -1;
 	currentPlayer: number = 0;
 
+	locked: boolean = false;
+
 	init(game: Game): void {
 		const deck = HeartsDeck.of(game.cardLib, this.players); // TODO
 		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: deck.size(), experimentalPlacementAlgorithm: true});
@@ -39,6 +41,7 @@ export class HeartsRules implements Rules {
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
+		if (this.locked) return;
 		this.playCard(game, 0, card);
 
 		const alreadyPlayed = this.currentTrick[0] !== undefined;
@@ -52,10 +55,12 @@ export class HeartsRules implements Rules {
 			this.currentPlayer = this.currentPlayer % this.players;
 		}
 
+		this.locked = true;
 		const playerHand = game.getContainer("player0");
 		const dealFinished = playerHand && playerHand.getCards().length === 0;
 
 		setTimeout(() => {
+ 		        this.locked = false;
 			// TODO: trick taking
 			dealFinished 
 				? this.newDeal(game)
