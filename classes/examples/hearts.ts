@@ -56,16 +56,15 @@ export class HeartsRules implements Rules {
 		}
 
 		this.locked = true;
+		game.addEvent(() => this.onTrickEnd(game), 1000);
+	}
+
+	onTrickEnd(game: Game) {
+		this.locked = false;
 		const playerHand = game.getContainer("player0");
 		const dealFinished = playerHand && playerHand.getCards().length === 0;
-
-		setTimeout(() => {
- 		        this.locked = false;
-			// TODO: trick taking
-			dealFinished 
-				? this.newDeal(game)
-				: this.newTrick(game);
-		}, 1000);
+		if (dealFinished) this.newDeal(game);
+		else this.newTrick(game);
 	}
 
 	private playCard(game: Game, player: number, card: Card) {
