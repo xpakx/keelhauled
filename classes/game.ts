@@ -16,11 +16,17 @@ export interface Position {
 	y: number;
 }
 
+export interface Event {
+	callback: (game: Game) => void;
+	ready: number | ((game: Game) => boolean);
+	done: boolean;
+}
+
 export class Game {
 	context: CanvasRenderingContext2D;
 	canvas: HTMLCanvasElement;
 	cardLib: CardLibrary;
-	prevTimestamp: number = 0;
+	timestamp: number = 0;
 
 	mouseCoord: Position = {x: -1, y: -1};
 
@@ -33,6 +39,8 @@ export class Game {
 	audio?: AudioController;
 
 	drawables: InterfaceDrawable<unknown>[] = [];
+
+	events: Event[] = [];
 
 	constructor(
 		context: CanvasRenderingContext2D, 
@@ -55,6 +63,7 @@ export class Game {
 	}
 
 	nextFrame(timestamp: number) {
+		this.timestamp = timestamp;
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		for (let containerName of this.containers.keys()) {
@@ -80,6 +89,23 @@ export class Game {
 		for (let drawable of this.drawables) {
 			if (drawable && drawable.tick) drawable.tick(timestamp);
 			drawable.draw(this.context);
+		}
+
+		let anyDone = false;
+		for (let event of this.events) {
+			if (event.done) continue;
+			if (typeof event.ready == "number") {
+				if (event.ready >= timestamp) continue;
+			} else {
+				if (!event.ready(this)) continue;
+			}
+			event.callback(this);
+			event.done = true;
+			anyDone = true;
+		}
+
+		if (anyDone) {
+			this.events = this.events.filter((e) => !e.done);
 		}
 	}
 
@@ -178,6 +204,15 @@ export class Game {
 		container2.addCard(slot);
 		card.deal({x: oldPos.x - slot.coord.x, y: oldPos.y - slot.coord.y});
 		return true;
+	}
+
+	addEvent(event: (game: Game) => void, ready: number | ((game: Game) => boolean)) {
+		if (typeof ready === "number") ready += this.timestamp;
+		this.events.push({
+			callback: event,
+			ready: ready,
+			done: false,
+		});
 	}
 }
 

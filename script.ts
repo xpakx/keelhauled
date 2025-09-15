@@ -40,7 +40,7 @@ window.onload = async () => {
 	};
 
 	window.requestAnimationFrame((timestamp) => {
-		game.prevTimestamp = timestamp;
+		game.timestamp = timestamp;
 		window.requestAnimationFrame(frame);
 	});
 
