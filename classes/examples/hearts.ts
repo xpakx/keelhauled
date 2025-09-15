@@ -8,17 +8,34 @@ export class HeartsRules implements Rules {
 	players: number = 4;
 	currentTrick: Record<number, Card> = {};
 
+	startingPlayer: number = -1;
+	currentPlayer: number = 0;
+
 	init(game: Game): void {
+		const deck = HeartsDeck.of(game.cardLib, this.players); // TODO
+		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: deck.size(), experimentalPlacementAlgorithm: true});
+		this.newDeal(game);
+	}
+
+	newDeal(game: Game) {
 		const deck = HeartsDeck.of(game.cardLib, this.players);
-		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: deck.size()});
 		deck.shuffle();
 		Layouts.dealTrickTaking(game, deck, {players: this.players});
+
+		this.startingPlayer = (this.startingPlayer + 1) % this.players;
+		this.currentPlayer = this.startingPlayer;
 		this.newTrick(game);
 	}
 
 	newTrick(game: Game) {
 		this.currentTrick = {};
 		game.getContainer("trick")?.clear(true);
+
+		while (this.currentPlayer != 0) {
+			this.randomPlayer(game, this.currentPlayer);
+			this.currentPlayer += 1;
+			this.currentPlayer = this.currentPlayer % this.players;
+		}
 	}
 
 	onCardClick(game: Game, card: Card, _coord?: Position): void {
@@ -26,13 +43,23 @@ export class HeartsRules implements Rules {
 
 		const alreadyPlayed = this.currentTrick[0] !== undefined;
 		if (!alreadyPlayed) return;
-		// TODO
-		this.randomPlayer(game, 1);
-		this.randomPlayer(game, 2);
-		this.randomPlayer(game, 3);
+
+		this.currentPlayer += 1;
+		this.currentPlayer = this.currentPlayer % this.players;
+		while (this.currentPlayer != this.startingPlayer) {
+			this.randomPlayer(game, this.currentPlayer);
+			this.currentPlayer += 1;
+			this.currentPlayer = this.currentPlayer % this.players;
+		}
+
+		const playerHand = game.getContainer("player0");
+		const dealFinished = playerHand && playerHand.getCards().length === 0;
 
 		setTimeout(() => {
-			this.newTrick(game);
+			// TODO: trick taking
+			dealFinished 
+				? this.newDeal(game)
+				: this.newTrick(game);
 		}, 1000);
 	}
 
