@@ -1,5 +1,6 @@
 import { CardProducer, Deck } from "../card-lib.js";
 import { Card } from "../card.js";
+import { Cards } from "../cards.js";
 import { Game, Position } from "../game.js";
 import { Layouts } from "../layouts.js";
 import { Rules } from "../rules.js";
@@ -86,7 +87,7 @@ export class HeartsRules implements Rules {
 		const suit = this.currentTrick[this.startingPlayer];
 		if (suit) {
 			const playersCardsInSuit = cards
-				.filter((c) => c[1] === suit.name[1]);
+				.filter((c) => Cards.getSuit(c) === Cards.getSuit(suit));
 			if (playersCardsInSuit.length > 0) cards = playersCardsInSuit;
 		}
 		return cards;
@@ -95,16 +96,11 @@ export class HeartsRules implements Rules {
 	getTrickWinner(): number {
 		const leadingCard = this.currentTrick[this.startingPlayer];
 		if (!leadingCard) return -1;
-		const suit = leadingCard.name[1];
+		const suit = Cards.getSuit(leadingCard);
 		const cards = Object.values(this.currentTrick)
-			.map(c => c.name)
-			.filter(c => c[1] === suit)
-			.map(c => c.slice(0, c.length-1));
-		const rankOrder = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-		cards.sort((a, b) => - (rankOrder.indexOf(a) - rankOrder.indexOf(b)));
-		console.log(cards)
-
-		const winningCard = `${cards[0]}${suit}`;
+			.map(c => c.name);
+		const winningCard = Cards.getStrongestCard(cards, suit);
+		console.log(winningCard);
 
 		for (let i = 0; i < this.players; i++) {
 			if (this.currentTrick[i].name === winningCard) return i;
