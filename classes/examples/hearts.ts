@@ -32,6 +32,7 @@ export class HeartsRules implements Rules {
 	newTrick(game: Game) {
 		this.currentTrick = {};
 		game.getContainer("trick")?.clear(true);
+		this.currentPlayer = this.startingPlayer;
 
 		while (this.currentPlayer != 0) {
 			this.randomPlayer(game, this.currentPlayer);
@@ -61,6 +62,9 @@ export class HeartsRules implements Rules {
 			this.currentPlayer = this.currentPlayer % this.players;
 		}
 
+		this.startingPlayer = this.getTrickWinner();
+		console.log(`Trick winner is player${this.startingPlayer}`);
+
 		this.locked = true;
 		game.addEvent(() => this.onTrickEnd(game), 1000);
 	}
@@ -86,6 +90,27 @@ export class HeartsRules implements Rules {
 			if (playersCardsInSuit.length > 0) cards = playersCardsInSuit;
 		}
 		return cards;
+	}
+
+	getTrickWinner(): number {
+		const leadingCard = this.currentTrick[this.startingPlayer];
+		if (!leadingCard) return -1;
+		const suit = leadingCard.name[1];
+		const cards = Object.values(this.currentTrick)
+			.map(c => c.name)
+			.filter(c => c[1] === suit)
+			.map(c => c.slice(0, c.length-1));
+		const rankOrder = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+		cards.sort((a, b) => - (rankOrder.indexOf(a) - rankOrder.indexOf(b)));
+		console.log(cards)
+
+		const winningCard = `${cards[0]}${suit}`;
+
+		for (let i = 0; i < this.players; i++) {
+			if (this.currentTrick[i].name === winningCard) return i;
+		}
+
+		return 0;
 	}
 
 	private playCard(game: Game, player: number, card: Card) {
