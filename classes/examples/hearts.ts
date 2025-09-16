@@ -13,15 +13,17 @@ export class HeartsRules implements Rules {
 	currentPlayer: number = 0;
 
 	locked: boolean = false;
+	deck?: HeartsDeck;
 
 	init(game: Game): void {
-		const deck = HeartsDeck.of(game.cardLib, this.players); // TODO
-		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: deck.size(), experimentalPlacementAlgorithm: true});
+		this.deck = HeartsDeck.of(game.cardLib, this.players);
+		Layouts.setTrickTakingLayout(game, {players: this.players, deckSize: this.deck.size(), experimentalPlacementAlgorithm: true});
 		this.newDeal(game);
 	}
 
 	newDeal(game: Game) {
-		const deck = HeartsDeck.of(game.cardLib, this.players);
+		if (!this.deck) return;
+		const deck = this.deck.clone();
 		deck.shuffle();
 		Layouts.dealTrickTaking(game, deck, {players: this.players});
 
