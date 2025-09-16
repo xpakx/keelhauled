@@ -2,7 +2,7 @@ import { Assets } from "../assets.js";
 import { CardLibrary, Deck } from "../card-lib.js";
 import { CardSlot, StartDataFn } from "../card.js";
 import { Circle } from "../containers/circle.js";
-import { Game, Position } from "../game.js";
+import { Game, Position, Size } from "../game.js";
 import { CardLoader, DefaultCardLoader, Rules } from "../rules.js";
 import { Action, Button, Drawable, TextLabel } from "../drawable.js";
 
@@ -725,11 +725,20 @@ class ActionIndicator implements Drawable<void, CardData> {
 	}
 }
 
+interface HintIndicatorOptions {
+	cardSize?: Size;
+}
+
 class HintIndicator implements Drawable<void, CardData> {
 	position: Position;
+	cardSize: Size = {width: 100, height: 100};
 
-	constructor(position: Position) {
+	constructor(position: Position, opt?: HintIndicatorOptions) {
 		this.position = position;
+		if (opt?.cardSize) {
+			this.cardSize.width = opt.cardSize.width;
+			this.cardSize.height = opt.cardSize.height;
+		}
 	}
 
 	draw(ctx: CanvasRenderingContext2D, slot: CardSlot<CardData>, position?: Position): void {
@@ -737,7 +746,7 @@ class HintIndicator implements Drawable<void, CardData> {
 		if (!data || !data.hint) return;
 
 		let x = slot.coord.x + (position?.x ?? 0);
-		const y = slot.coord.y + (position?.y ?? 0) + 100; // TODO: 100 is a card height
+		const y = slot.coord.y + (position?.y ?? 0) + this.cardSize.height;
 
 		ctx.font = "14px sans-serif";
 		ctx.textBaseline = "top";
@@ -751,7 +760,7 @@ class HintIndicator implements Drawable<void, CardData> {
 
 		const boxWidth = textWidth + padding * 2;
 		const boxHeight = textHeight + padding * 2;
-		x += 50 - textWidth/2 - padding; // TODO: 50 is half of a card height
+		x += this.cardSize.width/2 - textWidth/2 - padding;
 
 		ctx.beginPath();
 		ctx.roundRect(x, y, boxWidth, boxHeight, 6);
