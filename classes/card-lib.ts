@@ -161,6 +161,10 @@ export class Deck implements CardProducer {
 	size(): number {
 		return this.cards.length;
 	}
+
+	clone(): Deck {
+		return new Deck(this.cardLib, [...this.cards]);
+	}
 }
 
 export interface SubdeckOptions {
