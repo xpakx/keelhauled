@@ -151,7 +151,7 @@ export class MafiaRules implements Rules {
 			this.cardsFlipped += 1;
 			if (this.cardsFlipped >= 4) {
 				this.cardsFlipped = 0;
-				for (let slot of board.cards) lib.on("onDayEnd", slot, board.cards); // TODO: real identity?
+				for (let slot of board.cards) lib.on("onDayEnd", slot, board.cards, {useIdentity: "real"});
 			}
 		}
 	}
@@ -166,7 +166,7 @@ export class MafiaRules implements Rules {
 		const board = game.getContainer("board") as Circle<CardData> | undefined;
 		if (!board) return;
 
-		lib.on("onKill", slot, board.cards); // TODO: use real identity?
+		lib.on("onKill", slot, board.cards, {useIdentity: "real"});
 
 		if (data.realIdentity) {
 			card = lib.getCard(data.realIdentity);
@@ -327,14 +327,22 @@ export class MafiaLib<T> extends CardLibrary {
 		return this.extractAsDeck(this.getType(type));
 	}
 
-	on(hook: Hook, slot: CardSlot<CardData>, slots: CardSlot<CardData>[]) {
-		const actor = slot.getData()?.identity;
+	on(hook: Hook, slot: CardSlot<CardData>, slots: CardSlot<CardData>[], opt?: HookOptions) {
+		let actor = slot.getData()?.identity;
+		if (opt?.useIdentity == "real") {
+			const realIdentity = slot.getData()?.realIdentity;
+			if (realIdentity) actor = realIdentity;
+		}
 		if (!actor) return;
 		const skill = this.skills.get(actor);
 		if (!skill) return;
 		console.log(`Running hook ${hook} for ${actor}`);
 		if (skill[hook]) skill[hook](slot, slots);
 	}
+}
+
+interface HookOptions {
+	useIdentity?: "real" | "current";
 }
 
 type ActorType = "villager" | "outcast" | "minion" | "demon";
