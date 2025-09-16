@@ -153,13 +153,34 @@ export class Grid<T> implements CardContainer<T> {
 		this.initFn = fn;
 	}
 
-	removeCard(_card: Card | string): CardSlot<T> | undefined {
-		// TODO: implement
+	removeCard(card: Card | string): CardSlot<T> | undefined {
+		for (let i = 0; i <= this.cards.length; i++) {
+			const slot = this.cards[i];
+			if (card !== slot.getCard()) continue;
+
+			slot.removeCard();
+			const toReturn = new CardSlot<T>({x: slot.coord.x, y: slot.coord.y});
+			toReturn.setData(slot.getData());
+			toReturn.putCard(card);
+			return toReturn;
+		}
+
 		return;
 	}
 
-	addCard(_card: Card | CardSlot<T>): void {
-		// TODO: implement
+	addCard(card: Card | CardSlot<T>): void {
+		for (let i = 0; i <= this.cards.length; i++) {
+			const slot = this.cards[i];
+			if (slot.getCard() !== undefined) continue;
+			if ("coord" in card) {
+				slot.setData(card.getData());
+				const c = card.getCard();
+				if (c) slot.putCard(c);
+			} else {
+				slot.putCard(card);
+			}
+			break;
+		}
 	}
 
 	clear(): void {
