@@ -99,6 +99,7 @@ export class MafiaRules implements Rules {
 		}
 
 		for (let slot of board.cards) lib.on("onDeal", slot, board.cards);
+		this.cardsFlipped = 0;
 	}
 
 	onSlotClick(game: Game, slot: CardSlot<CardData>, _coord?: Position): void {
