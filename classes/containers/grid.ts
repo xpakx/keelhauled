@@ -154,7 +154,7 @@ export class Grid<T> implements CardContainer<T> {
 	}
 
 	removeCard(card: Card | string): CardSlot<T> | undefined {
-		for (let i = 0; i <= this.cards.length; i++) {
+		for (let i = 0; i < this.cards.length; i++) {
 			const slot = this.cards[i];
 			if (card !== slot.getCard()) continue;
 
@@ -169,7 +169,7 @@ export class Grid<T> implements CardContainer<T> {
 	}
 
 	addCard(card: Card | CardSlot<T>): void {
-		for (let i = 0; i <= this.cards.length; i++) {
+		for (let i = 0; i < this.cards.length; i++) {
 			const slot = this.cards[i];
 			if (slot.getCard() !== undefined) continue;
 			if ("coord" in card) {
