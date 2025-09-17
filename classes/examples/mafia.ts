@@ -502,7 +502,10 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 		const faceImage = await Assets.loadImage("images/empty.png");
 
 		const sprites = await Assets.loadImage("images/mafia/portraits.png");
-		const portraits = await Assets.splitGridImage(sprites, 3, 2);
+		const portraits = await Assets.splitIndexedGridImage(
+			sprites, 3, 2, 
+			["hunter", "enlightened", "medium", "confessor", "empress", "minion"]
+		);
 
 		cardLib.setDefaultReverse(cardImage);
 		cardLib.registerDefinition("empty", faceImage);
@@ -511,18 +514,20 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 		this.registerForType(villagers, faceImage, portraits, cardLib);
 
 		// TODO: add judge
-		const portraits2 = await Assets.splitGridImage(sprites, 3, 2);
+		const portraits2 = await Assets.splitIndexedGridImage(sprites, 3, 2, ['judge']);
 		this.registerForType(['judge'], faceImage, portraits2, cardLib);
 
 		const minions = ["minion"];
 		this.registerForType(minions, faceImage, portraits, cardLib, "red");
 	}
 
-	registerForType(names: string[], emptyCard: HTMLImageElement, portraits: HTMLImageElement[], cardLib: CardLibrary, color?: string) {
+	registerForType(names: string[], emptyCard: HTMLImageElement, portraits: Map<string, HTMLImageElement>, cardLib: CardLibrary, color?: string) {
 		for (let name of names) {
+			const portrait = portraits.get(name);
+			if (!portrait) continue;
 			const image = this.createCardImage(
 				emptyCard,
-				portraits.shift()!,
+				portrait,
 				name,
 				color,
 			);
