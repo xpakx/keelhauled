@@ -32,10 +32,9 @@ export class Fan<T> implements CardContainer<T> {
 		cards.forEach((card, i) => {
 			const t = start + i * step;
 			const { x, y, angle } = this.curveFn(t, this.radius, this.center);
-			card.dealt = true; // DEBUG
-			card.flipped = true; // DEBUG
 			const slot = new CardSlot<T>({x, y}, i, angle);
 			if (this.initFn) slot.setInitFunction(this.initFn);
+			card.dealt = true; // DEBUG
 			if (options?.flipped) card.flipped = true;
 			slot.putCard(card);
 			this.cards.push(slot);
@@ -128,8 +127,22 @@ export class Fan<T> implements CardContainer<T> {
 		return;
 	}
 
-	addCard(_card: Card | CardSlot<T>): void {
-		// TODO: implement
+	addCard(card: Card | CardSlot<T>): void {
+		const step = 1 / (this.maxCards - 1);
+		const start = Math.max(0, (this.maxCards - this.cards.length + 1)/2)*step;
+		const t = start + this.cards.length * step;
+		const { x, y, angle } = this.curveFn(t, this.radius, this.center);
+
+		const slot = "coord" in card ? card : new CardSlot<T>({x, y}, this.cards.length, angle);
+		if (!("coord" in card)) {
+			slot.putCard(card);
+		} else {
+			slot.coord.x = x;
+			slot.coord.y = y
+			slot.zIndex = this.cards.length;
+			slot.angle = angle ?? 0;
+		}
+		this.cards.push(slot);
 	}
 
 	clear(): void {
