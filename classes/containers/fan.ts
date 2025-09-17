@@ -122,9 +122,24 @@ export class Fan<T> implements CardContainer<T> {
 		this.initFn = fn;
 	}
 
-	removeCard(_card: Card | string): CardSlot<T> | undefined {
-		// TODO: implement
-		return;
+	removeCard(card: Card | string): CardSlot<T> | undefined {
+		const toReturn = typeof card === "string" ? this.removeCardByName(card) : this.removeCardByCard(card);
+		this.fixPositions();
+		return toReturn;
+	}
+
+	private removeCardByCard(card: Card): CardSlot<T> | undefined {
+		const cardInHand = this.cards.findIndex(c => c.getCard() === card);
+		if (cardInHand < 0) return;
+		const [toReturn] = this.cards.splice(cardInHand, 1);
+		return toReturn;
+	}
+
+	private removeCardByName(card: string): CardSlot<T> | undefined {
+		const cardInHand = this.cards.findIndex(c => c.getCard()?.name === card);
+		if (cardInHand < 0) return;
+		const [toReturn] = this.cards.splice(cardInHand, 1);
+		return toReturn;
 	}
 
 	addCard(card: Card | CardSlot<T>): void {
@@ -147,5 +162,17 @@ export class Fan<T> implements CardContainer<T> {
 
 	clear(): void {
 		for (let slot of this.cards) slot.removeCard();
+	}
+
+	private fixPositions(): void {
+		const step = 1 / (this.maxCards - 1);
+		const start = Math.max(0, (this.maxCards - this.cards.length)/2)*step;
+		this.cards.forEach((card, i) => {
+			const t = start + i * step;
+			const { x, y, angle } = this.curveFn(t, this.radius, this.center);
+			card.coord = {x, y};
+			card.zIndex = i;
+			card.angle = angle ?? 0;
+		});
 	}
 }
