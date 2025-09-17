@@ -106,12 +106,24 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 
 		for (let suit of suits) {
 			for (let rank of ranks) {
+				// TODO: main image for A, K, Q, J
+				let portrait = undefined;
+				const rankNum = parseInt(rank);
+				if (!isNaN(rankNum)) {
+					portrait = this.createNumberPortrait(
+						suitImages[suit],
+						rankNum,
+						size,
+					);
+				}
+				
 				const image = this.createCardImage(
 					background,
 					frame,
 					suitImages[suit],
 					rankImages[rank],
 					size,
+					portrait,
 				);
 				cardLib.registerDefinition(`${rank}${suit}`, image);
 			}
@@ -124,6 +136,7 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		suit: HTMLImageElement,
 		rank: HTMLImageElement,
 		size: Size,
+		drawPortrait: ((ctx: OffscreenCanvasRenderingContext2D) => void) | undefined
 	): HTMLImageElement {
 		const canvas = new OffscreenCanvas(size.width, size.height);
 		canvas.width = size.width;
@@ -133,7 +146,7 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 
 		ctx.drawImage(background, 0, 0, size.width, size.height);
 
-		// TODO: main image
+		if (drawPortrait) drawPortrait(ctx);
 
 		ctx.drawImage(frame, 0, 0, size.width, size.height);
 
@@ -158,5 +171,92 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		});
 
 		return img;
+	}
+
+	createNumberPortrait(suit: HTMLImageElement, rank: number, size: Size): (ctx: OffscreenCanvasRenderingContext2D) => void {
+		let suitSize = size.width * 0.25;
+		let positions: {pos: Position, flipped: 1 | -1}[] = [];
+		const center = {x: size.width/2, y: size.height/2};
+		if (rank === 2) {
+			const dPos = {x: 0.5*suitSize, y: -0.7*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+		}
+		if (rank === 3) {
+			const dPos = {x: 0.7*suitSize, y: -1.0*suitSize};
+			positions.push(this.toPosition(center, suitSize));
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+		}
+		if (rank === 4) {
+			const dPos = {x: 0.7*suitSize, y: -1.2*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 0.7*suitSize, y: 0};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+		}
+		if (rank === 5) {
+			suitSize *= 0.9;
+			positions.push(this.toPosition(center, suitSize));
+
+			const dPos = {x: 0, y: -1.5*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 0.9*suitSize, y: -0.8*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+		}
+		if (rank === 6) {
+			suitSize *= 0.9;
+
+			const dPos = {x: 0.9*suitSize, y: 0};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 0.9*suitSize, y: -1.3*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+
+			const dPos3 = {x: 0, y: -0.7*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos3, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
+		}
+		if (rank === 7) {
+			suitSize *= 0.9;
+
+			const dPos = {x: 0.9*suitSize, y: 0};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 0.9*suitSize, y: -1.3*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+
+			const dPos3 = {x: 0, y: -1.3*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos3, "up"));
+			positions.push(this.toPosition(center, suitSize));
+			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
+		}
+		// TODO: 8, 9, 10
+		return (ctx: OffscreenCanvasRenderingContext2D) => {
+			for (let position of positions) {
+				ctx.drawImage(suit, position.pos.x, position.pos.y, suitSize, suitSize);
+			}
+		}
+	}
+
+	private toPosition(center: Position, suitSize: number, dPos?: Position, move?: "up" | "down"): {pos: Position, flipped: 1 | -1} {
+		const dX = (dPos?.x ?? 0) * (move === "down" ? -1 : 1);
+		const dY = (dPos?.y ?? 0) * (move === "down" ? -1 : 1);
+		return {
+			pos: {
+				x: center.x - suitSize/2 - dX,
+				y: center.y - suitSize/2 - dY,
+			}, 
+			flipped: 1
+		}
 	}
 }
