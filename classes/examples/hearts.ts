@@ -8,12 +8,16 @@ import { Rules } from "../rules.js";
 export class HeartsRules implements Rules {
 	players: number = 4;
 	currentTrick: Record<number, Card> = {};
+	score: Record<number, number> = {};
 
 	startingPlayer: number = -1;
 	currentPlayer: number = 0;
 
 	locked: boolean = false;
 	deck?: HeartsDeck;
+
+	penaltyColor: string = "H";
+	penaltyCards: Record<string, number> = {};
 
 	init(game: Game): void {
 		this.deck = HeartsDeck.of(game.cardLib, this.players);
@@ -22,6 +26,8 @@ export class HeartsRules implements Rules {
 	}
 
 	newDeal(game: Game) {
+		console.log(this.score);
+		this.score = {};
 		if (!this.deck) return;
 		const deck = this.deck.clone();
 		deck.shuffle();
@@ -67,6 +73,10 @@ export class HeartsRules implements Rules {
 
 		this.startingPlayer = this.getTrickWinner();
 		console.log(`Trick winner is player${this.startingPlayer}`);
+
+		const cards = Object.values(this.currentTrick);
+		this.addPenalty(this.startingPlayer, cards);
+
 
 		this.locked = true;
 		game.addEvent(() => this.onTrickEnd(game), 1000);
@@ -149,6 +159,22 @@ export class HeartsRules implements Rules {
 	}
 
 	onGameOver(_game: Game): void {
+	}
+
+	addPenalty(player: number, cards: Card[]) {
+		let penalty = this.score[player] ?? 0;
+		for (let card of cards) {
+			const cardPenalty = this.penaltyCards[card.name];
+			if (cardPenalty) {
+				penalty += cardPenalty;
+
+			} else {
+				const suit = Cards.getSuit(card);
+				if (suit === this.penaltyColor) penalty += 1;
+			}
+		}
+
+		this.score[player] = penalty;
 	}
 }
 
