@@ -108,18 +108,11 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 			for (let rank of ranks) {
 				// TODO: main image for K, Q, J
 				let portrait = undefined;
-				const rankNum = parseInt(rank);
+				const rankNum = rank === 'A' ? 1 : parseInt(rank);
 				if (!isNaN(rankNum)) {
 					portrait = this.createNumberPortrait(
 						suitImages[suit],
 						rankNum,
-						size,
-					);
-				}
-				if (rank == "A") {
-					portrait = this.createNumberPortrait(
-						suitImages[suit],
-						1,
 						size,
 					);
 				}
