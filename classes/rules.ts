@@ -106,13 +106,20 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 
 		for (let suit of suits) {
 			for (let rank of ranks) {
-				// TODO: main image for A, K, Q, J
+				// TODO: main image for K, Q, J
 				let portrait = undefined;
 				const rankNum = parseInt(rank);
 				if (!isNaN(rankNum)) {
 					portrait = this.createNumberPortrait(
 						suitImages[suit],
 						rankNum,
+						size,
+					);
+				}
+				if (rank == "A") {
+					portrait = this.createNumberPortrait(
+						suitImages[suit],
+						1,
 						size,
 					);
 				}
@@ -177,6 +184,10 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 		let suitSize = size.width * 0.25;
 		let positions: {pos: Position, flipped: 1 | -1}[] = [];
 		const center = {x: size.width/2, y: size.height/2};
+		if (rank === 1) {
+			suitSize *= 1.3;
+			positions.push(this.toPosition(center, suitSize));
+		}
 		if (rank === 2) {
 			const dPos = {x: 0.5*suitSize, y: -0.7*suitSize};
 			positions.push(this.toPosition(center, suitSize, dPos, "up"));
@@ -240,7 +251,70 @@ export class TraditionalDeckCardLoader extends DefaultCardLoader implements Card
 			positions.push(this.toPosition(center, suitSize));
 			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
 		}
-		// TODO: 8, 9, 10
+		if (rank === 8) {
+			suitSize *= 0.8;
+
+			const dPos = {x: 0, y: 0.7*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 1.1*suitSize, y: -1.0*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+
+			const dPos3 = {x: 0.5*suitSize, y: -1.78*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos3, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
+
+			const dPos4 = {x: 1.1*suitSize, y: 0.3*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos4, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos4, "down"));
+		}
+		if (rank === 9) {
+			suitSize *= 0.8;
+
+			positions.push(this.toPosition(center, suitSize));
+
+			const dPos = {x: 0.6*suitSize, y: -0.89*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 1.1*suitSize, y: -1.78*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+
+			const dPos3 = {x: 0, y: -1.78*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos3, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
+
+			const dPos4 = {x: 1.1*suitSize, y: 0};
+			positions.push(this.toPosition(center, suitSize, dPos4, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos4, "down"));
+		}
+		if (rank === 10) {
+			suitSize *= 0.8;
+
+			const dPos = {x: 0.6*suitSize, y: -0.89*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos, "down"));
+
+			const dPos2 = {x: 1.1*suitSize, y: -1.78*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos2, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos2, "down"));
+
+			const dPos3 = {x: 0, y: -1.78*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos3, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos3, "down"));
+
+			const dPos4 = {x: 1.1*suitSize, y: 0};
+			positions.push(this.toPosition(center, suitSize, dPos4, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos4, "down"));
+
+			const dPos5 = {x: 0.25*suitSize, y: 0.5*suitSize};
+			positions.push(this.toPosition(center, suitSize, dPos5, "up"));
+			positions.push(this.toPosition(center, suitSize, dPos5, "down"));
+
+		}
 		return (ctx: OffscreenCanvasRenderingContext2D) => {
 			for (let position of positions) {
 				ctx.drawImage(suit, position.pos.x, position.pos.y, suitSize, suitSize);
