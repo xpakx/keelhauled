@@ -5,8 +5,15 @@ import { Game, Position } from "../game.js";
 import { Layouts } from "../layouts.js";
 import { Rules } from "../rules.js";
 
+
+export interface HeartsGameOptions {
+	players?: 3 | 4 | 5 | 6;
+	penaltyColor?: string;
+	penaltyCards?: Record<string, number>;
+}
+
 export class HeartsRules implements Rules {
-	players: number = 4;
+	players: number;
 	currentTrick: Record<number, Card> = {};
 	score: Record<number, number> = {};
 
@@ -16,8 +23,14 @@ export class HeartsRules implements Rules {
 	locked: boolean = false;
 	deck?: HeartsDeck;
 
-	penaltyColor: string = "H";
-	penaltyCards: Record<string, number> = {};
+	penaltyColor: string;
+	penaltyCards: Record<string, number>;
+
+	constructor(opt?: HeartsGameOptions) {
+		this.penaltyColor = opt?.penaltyColor ?? "H";
+		this.penaltyCards = opt?.penaltyCards ?? {};
+		this.players = opt?.players ?? 4;
+	}
 
 	init(game: Game): void {
 		this.deck = HeartsDeck.of(game.cardLib, this.players);
