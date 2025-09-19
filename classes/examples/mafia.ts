@@ -260,7 +260,10 @@ interface ActorSkills {
 
 type Hook = keyof ActorSkills;
 
-type ActorDefinition = Partial<Omit<ActorData, 'name'>> & Pick<ActorData, 'name'> & ActorSkills;
+type ActorDefinition = Partial<Omit<ActorData, 'name'>> & 
+	Pick<ActorData, 'name'> &
+	ActorSkills &
+	{ignore?: boolean};
 
 interface ActorData {
 	name: string;
@@ -278,6 +281,7 @@ export class MafiaLib<T> extends CardLibrary {
 	actorData: Map<string, ActorData> = new Map();
 
 	addCardDefinition(type: T, actor: ActorDefinition) {
+		if (actor.ignore) return;
 		let actors = this.actorsByType.get(type);
 		if (!actors) {
 			actors = [];
@@ -475,6 +479,7 @@ export function getMafiaLibrary(): CardLibrary {
 		}
 	});
 	lib.addCardDefinition("villager", {
+		ignore: true,
 		name: "judge",
 		skillToSelect: 1,
 		onSkill: (card: CardSlot<CardData>, cards: CardSlot<CardData>[]) => {
@@ -512,10 +517,6 @@ export class MafiaCardLoader extends DefaultCardLoader implements CardLoader {
 
 		const villagers = ["hunter", "enlightened", "medium", "confessor", "empress"];
 		this.registerForType(villagers, faceImage, portraits, cardLib);
-
-		// TODO: add judge
-		const portraits2 = await Assets.splitIndexedGridImage(sprites, 3, 2, ['judge']);
-		this.registerForType(['judge'], faceImage, portraits2, cardLib);
 
 		const minions = ["minion"];
 		this.registerForType(minions, faceImage, portraits, cardLib, "red");
