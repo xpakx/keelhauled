@@ -68,6 +68,14 @@ function nameToRules(name: string): Rules {
 			return new MafiaRules();
 		case "hearts": 
 			return new HeartsRules();
+		case "heartsModern": 
+			return new HeartsRules({passing: true});
+		case "heartsBlackJack": 
+			return new HeartsRules({passing: "left", penaltyCards: {"JS": 10}});
+		case "heartsBlackLady": 
+			return new HeartsRules({passing: true, penaltyCards: {"QS": 13}});
+		case "heartsBlackMaria": 
+			return new HeartsRules({passing: "right", penaltyCards: {"AS": 10, "KS": 7, "QS": 13}});
 		case "memory": 
 		case "memoryTrad": 
 		default:

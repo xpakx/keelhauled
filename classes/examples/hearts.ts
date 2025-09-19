@@ -10,6 +10,14 @@ export interface HeartsGameOptions {
 	players?: 3 | 4 | 5 | 6;
 	penaltyColor?: string;
 	penaltyCards?: Record<string, number>;
+	passing?: boolean | "left" | "right"; // TODO
+
+	// minor variants
+	breakingHearts?: boolean; // TODO
+	startingCard?: string; // TODO: 2C
+	penaltyBannedOnFirstTrick?: boolean; // TODO
+	shootingTheMoon?: boolean; // TODO
+	revokePenalty?: number; // TODO
 }
 
 export class HeartsRules implements Rules {
