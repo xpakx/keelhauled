@@ -48,7 +48,23 @@ export class HeartsRules implements Rules {
 
 		this.startingPlayer = (this.startingPlayer + 1) % this.players;
 		this.currentPlayer = this.startingPlayer;
-		this.newTrick(game);
+
+		this.currentTrick = {};
+		game.getContainer("trick")?.clear(true);
+
+		game.addEvent(() => this.newTrick(game), () => this.isDealFinished(game));
+	}
+
+	isDealFinished(game: Game): boolean {
+		for (let i = 0; i < this.players; i++) {
+			const hand = game.getContainer(`player${i}`)
+			if (!hand) continue;
+			const cards = hand.getCards();
+			if (cards.length === 0) continue;
+			const card = cards[cards.length-1];
+			if (card.animation === card.dealingAnimation) return false;
+		}
+		return true
 	}
 
 	newTrick(game: Game) {
